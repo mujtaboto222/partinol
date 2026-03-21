@@ -2363,16 +2363,26 @@ document.getElementById('ai-detect-btn').addEventListener('click', async functio
       tmpCanvas.toBlob(resolve, 'image/jpeg', 0.95);
     });
 
+    // Step 1: Wake the backend with a GET request first
+    // (Render free tier only wakes on GET, not POST)
+    try {
+      await fetch(AI_BACKEND_URL + '/', { method: 'GET', mode: 'cors' });
+    } catch(e) { /* ignore — just waking it up */ }
+
+    // Wait a moment for it to fully start
+    await new Promise(r => setTimeout(r, 3000));
+    btn.textContent = '⏳ Detecting...';
+
+    // Step 2: Now send the actual POST with image
     const form = new FormData();
     form.append('file', blob, 'ceph.jpg');
 
-    // Try up to 3 times with increasing wait — backend may be waking from sleep
     let res, lastErr;
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        btn.textContent = attempt === 1 ? '⏳ Waking up AI...' : `⏳ Attempt ${attempt}/3...`;
+        btn.textContent = attempt === 1 ? '⏳ Detecting...' : `⏳ Attempt ${attempt}/3...`;
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 40000); // 40s timeout
+        const timer = setTimeout(() => controller.abort(), 45000);
         res = await fetch(AI_BACKEND_URL + '/detect', {
           method: 'POST',
           body: form,
@@ -2383,7 +2393,7 @@ document.getElementById('ai-detect-btn').addEventListener('click', async functio
         lastErr = new Error('Server error ' + res.status);
       } catch(e) {
         lastErr = e;
-        if (attempt < 3) await new Promise(r => setTimeout(r, 3000));
+        if (attempt < 3) await new Promise(r => setTimeout(r, 5000));
       }
     }
     if (!res || !res.ok) throw lastErr || new Error('Failed after 3 attempts');
