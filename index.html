@@ -227,8 +227,8 @@
     color:var(--muted);font-family:'DM Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:.04em;transition:all .15s;}
   .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
 
-  /* ═══ TABLET — SHARED (≤1024px) ══════════════ */
-  @media(max-width:1024px){
+  /* ═══ TABLET — SHARED (≤1194px) ══════════════ */
+  @media(max-width:1194px){
     #tab-bar{display:flex;}
     body{overflow:hidden;}
     .main{
@@ -246,84 +246,171 @@
     .panel-right{display:none !important;}
     .canvas-wrap.tab-active{display:flex !important;position:relative;width:100%;height:100%;}
     .panel-right.tab-active{display:block !important;overflow-y:auto;height:100%;}
-    .tb{font-size:.57rem;padding:3px 7px;}
+    /* Larger touch targets for toolbar buttons — min 44px per Apple HIG */
+    .tb{font-size:.68rem;padding:0 14px;min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;}
     .zoom-lbl{display:none;}
-    header{padding:7px 12px;gap:7px;}
-    header h1{font-size:.85rem;}
+    header{padding:0 14px;gap:8px;}
+    header h1{font-size:.88rem;}
     .hdr-right{display:none;}
+    /* Larger tab bar tap targets */
+    .tab-btn{padding:0 8px;height:48px;font-size:.74rem;display:inline-flex;align-items:center;justify-content:center;}
+    /* Landmark list — generous tap targets */
+    .lm-item{padding:10px 12px 10px 10px !important;min-height:48px;align-items:center;}
+    .lm-dot{margin-top:0 !important;width:11px !important;height:11px !important;}
+    .lm-abbr{font-size:.78rem !important;}
+    .lm-name{font-size:.65rem !important;}
+    .lm-sep{padding:12px 10px 5px !important;font-size:.6rem !important;}
+    .pl-head{padding:12px 12px 7px !important;font-size:.63rem !important;}
+    /* Hint box readable on tablet */
+    .hint-box{font-size:.68rem !important;padding:10px 12px !important;line-height:1.65 !important;}
+    .hint-title{font-size:.72rem !important;}
+    /* AI badge */
+    .ai-badge-wrap{margin:8px 8px 2px !important;}
+    .ai-badge{font-size:.62rem !important;padding:5px 10px !important;}
+    /* Results panel */
+    .m-row{padding:9px 14px !important;min-height:44px;}
+    .m-name{font-size:.74rem !important;}
+    .m-val{font-size:.72rem !important;}
+    .m-status{font-size:.62rem !important;padding:3px 8px !important;min-height:24px;display:inline-flex;align-items:center;}
+    .sec-lbl{padding:10px 14px 5px !important;font-size:.62rem !important;}
+    /* Progress */
+    .pl-footer{padding:10px 12px !important;}
+    .prog-text{font-size:.65rem !important;}
   }
 
-  /* ═══ TABLET PORTRAIT ════════════════════════ */
+  /* ═══ iPAD AIR PORTRAIT (820×1180) ═══════════ */
   @media(max-width:1024px) and (orientation:portrait){
     .main{
-      grid-template-columns:180px 1fr !important;
-      grid-template-rows:calc(100dvh - 96px) !important;
-      height:calc(100dvh - 96px) !important;
+      grid-template-columns:250px 1fr !important;
+      grid-template-rows:calc(100dvh - 110px) !important;
+      height:calc(100dvh - 110px) !important;
     }
     .panel-left{grid-row:1;grid-column:1;}
     .canvas-wrap,
     .panel-right{grid-row:1;grid-column:2;}
-    /* Toolbar */
+    header{height:60px !important;padding:0 18px !important;}
+    header h1{font-size:.95rem !important;}
+    #tab-bar{height:50px !important;}
+    #tab-bar .tab-btn{height:50px !important;font-size:.78rem !important;font-weight:600 !important;}
+    /* Landmark list — generous tap targets for finger */
+    .lm-item{padding:12px 12px 12px 10px !important;min-height:52px !important;align-items:center;}
+    .lm-dot{margin-top:0 !important;width:12px !important;height:12px !important;}
+    .lm-abbr{font-size:.82rem !important;font-weight:700 !important;}
+    .lm-name{font-size:.68rem !important;}
+    .lm-sep{padding:14px 12px 5px !important;font-size:.63rem !important;}
+    .pl-head{padding:14px 14px 8px !important;font-size:.65rem !important;}
+    .hint-box{font-size:.7rem !important;padding:11px 13px !important;line-height:1.65 !important;}
+    .hint-title{font-size:.75rem !important;}
+    .ai-badge-wrap{margin:10px 10px 2px !important;}
+    .ai-badge{font-size:.65rem !important;padding:6px 11px !important;}
+    /* Progress */
+    .pl-footer{padding:12px 14px !important;}
+    .prog-bar{height:4px !important;}
+    .prog-text{font-size:.68rem !important;}
+    /* Toolbar — fixed bottom, larger touch targets */
     .toolbar{
       position:fixed !important;
-      bottom:max(6px,env(safe-area-inset-bottom,6px));
-      left:190px;right:0;
+      bottom:max(14px,env(safe-area-inset-bottom,14px));
+      left:258px;right:10px;
       transform:none;width:auto;
-      max-width:calc(100vw - 200px);
-      overflow-x:auto;gap:4px;padding:4px 8px;z-index:500;
+      max-width:calc(100vw - 272px);
+      overflow-x:auto;gap:5px;padding:5px 8px;z-index:500;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      border-radius:10px;
     }
-    /* Magnifier — top right, comfortable size */
+    .toolbar::-webkit-scrollbar{display:none;}
+    .tb{font-size:.68rem;padding:0 15px;min-height:46px;min-width:46px;border-radius:7px;}
+    .tb.primary{min-height:46px;padding:0 20px;}
+    /* Magnifier — positioned top-right of canvas, large enough for precision */
     #magnifier{
       position:fixed !important;
-      top:96px !important;right:10px !important;
-      width:200px;height:200px;z-index:300;
+      top:114px !important;right:14px !important;
+      width:210px;height:210px;z-index:300;
+      border-width:2px !important;
     }
-    #mag-canvas{width:200px !important;height:200px !important;}
-    .lm-name{font-size:.55rem;}
-    .tab-btn{font-size:.65rem;}
+    #mag-canvas{width:210px !important;height:210px !important;}
+    /* Results panel */
+    .m-row{padding:11px 16px !important;min-height:48px;}
+    .m-name{font-size:.76rem !important;}
+    .m-name small{font-size:.6rem !important;}
+    .m-val{font-size:.74rem !important;}
+    .m-status{font-size:.64rem !important;padding:3px 9px !important;min-height:26px;display:inline-flex;align-items:center;}
+    .sec-lbl{padding:12px 16px 5px !important;font-size:.64rem !important;}
+    .res-header{padding:14px 16px 10px !important;}
+    .res-header h2{font-size:1rem !important;}
+    /* Mode chip */
+    #mode-chip{font-size:.66rem !important;padding:4px 10px !important;}
   }
 
-  /* ═══ TABLET LANDSCAPE ═══════════════════════ */
-  @media(max-width:1024px) and (orientation:landscape){
+  /* ═══ iPAD AIR LANDSCAPE (1180×820) ══════════ */
+  @media(min-width:1025px) and (max-width:1194px) and (orientation:landscape){
+    #tab-bar{display:flex;}
+    body{overflow:hidden;}
     .main{
-      grid-template-columns:155px 1fr !important;
-      grid-template-rows:calc(100dvh - 84px) !important;
-      height:calc(100dvh - 84px) !important;
+      display:grid !important;
+      grid-template-columns:230px 1fr !important;
+      grid-template-rows:calc(100dvh - 94px) !important;
+      height:calc(100dvh - 94px) !important;
+      overflow:hidden !important;
     }
-    .panel-left{grid-row:1;grid-column:1;}
+    .panel-left{
+      display:flex !important;
+      flex-direction:column;
+      grid-row:1;grid-column:1;
+      height:100%;
+      overflow-y:auto;
+      border-right:1px solid var(--border);
+    }
     .canvas-wrap,
     .panel-right{grid-row:1;grid-column:2;}
-    /* Compact header in landscape */
-    header{padding:4px 12px !important;height:40px !important;}
-    header h1{font-size:.78rem !important;}
+    .canvas-wrap{display:flex !important;position:relative;width:100%;height:100%;}
+    .panel-right{display:none !important;}
+    .panel-right.tab-active{display:block !important;overflow-y:auto;height:100%;}
+    .canvas-wrap.tab-active{display:flex !important;}
+    header{padding:0 16px !important;height:48px !important;}
+    header h1{font-size:.88rem !important;}
     header h1 em{display:none;}
-    #tab-bar .tab-btn{padding:6px 4px;font-size:.62rem;}
-    /* Toolbar — compact and low */
+    #tab-bar{height:46px !important;}
+    #tab-bar .tab-btn{height:46px !important;font-size:.7rem;padding:0 16px;font-weight:600 !important;}
+    /* Toolbar — fixed bottom */
     .toolbar{
       position:fixed !important;
-      bottom:max(4px,env(safe-area-inset-bottom,4px));
-      left:165px;right:0;
+      bottom:max(8px,env(safe-area-inset-bottom,8px));
+      left:238px;right:8px;
       transform:none;width:auto;
-      max-width:calc(100vw - 175px);
-      overflow-x:auto;gap:3px;padding:3px 6px;z-index:500;
+      max-width:calc(100vw - 250px);
+      overflow-x:auto;gap:4px;padding:4px 8px;z-index:500;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      border-radius:8px;
     }
-    .tb{font-size:.52rem;padding:2px 6px;}
-    /* Magnifier — smaller in landscape to not block image */
+    .toolbar::-webkit-scrollbar{display:none;}
+    .tb{font-size:.65rem;padding:0 13px;min-height:44px;min-width:44px;border-radius:6px;}
+    .tb.primary{padding:0 18px;}
+    /* Magnifier */
     #magnifier{
       position:fixed !important;
-      top:84px !important;right:8px !important;
-      width:140px;height:140px;z-index:300;
+      top:97px !important;right:12px !important;
+      width:170px;height:170px;z-index:300;
     }
-    #mag-canvas{width:140px !important;height:140px !important;}
-    /* Compact landmark panel */
-    .lm-name{display:none;}
-    .lm-item{padding:3px 6px !important;}
-    .pl-head{padding:8px 10px 4px !important;font-size:.55rem !important;}
-    .lm-sep{padding:6px 10px 2px !important;}
-    .pl-footer{padding:6px 10px !important;}
-    /* Patient panel compact */
+    #mag-canvas{width:170px !important;height:170px !important;}
+    /* Compact landmark panel in landscape */
+    .lm-item{padding:9px 10px !important;min-height:44px;}
+    .lm-abbr{font-size:.74rem !important;}
+    .lm-name{font-size:.62rem !important;}
+    .pl-head{padding:10px 12px 5px !important;font-size:.61rem !important;}
+    .lm-sep{padding:10px 10px 3px !important;}
+    .pl-footer{padding:8px 12px !important;}
+    .ai-badge-wrap{margin:8px 8px 2px !important;}
+    .ai-badge{font-size:.62rem !important;padding:5px 10px !important;}
     #patient-name{width:90px;}
     #patient-panel label{display:none;}
+    /* Results */
+    .m-row{padding:9px 14px !important;min-height:44px;}
+    .m-name{font-size:.72rem !important;}
+    .m-val{font-size:.7rem !important;}
+    .m-status{font-size:.61rem !important;padding:2px 7px !important;}
   }
 
   /* ═══ SMALL PHONE (≤480px) ═══════════════════ */
@@ -331,6 +418,7 @@
     #patient-panel{display:none;}
     .main{grid-template-columns:140px 1fr !important;}
     .toolbar{left:150px;max-width:calc(100vw - 160px);}
+    .tb{font-size:.55rem;padding:0 8px;min-height:40px;}
   }
 
   
@@ -1316,6 +1404,11 @@ function loadImg(file){
       document.getElementById('canvas-container').style.display='block';
       document.getElementById('toolbar').style.display='flex';
       document.getElementById('magnifier').style.display='block';
+      // On tablet, auto-enable magnifier for precise stylus placement
+      if(window.innerWidth <= 1194 && window.matchMedia('(pointer:coarse)').matches){
+        showMag=true;
+        document.getElementById('mag-btn').textContent='🔍 Magnifier ON';
+      }
       // Auto-enable grid on image load
       showGrid=true;
       gridCanvas.style.display='block';
@@ -1434,8 +1527,10 @@ const toN=(cx,cy)=>({x:(cx-panX-iX)/iW,y:(cy-panY-iY)/iH});
 // ═══════════════════════════════════════════════
 // MAGNIFIER
 // ═══════════════════════════════════════════════
-const MAG_ZOOM=4,MAG_R=80;
+const MAG_ZOOM_DESKTOP=4, MAG_ZOOM_TOUCH=6, MAG_R=80;
 function drawMag(cx,cy){
+  // Use higher zoom on touch/pen for more precision
+  var MAG_ZOOM = (_lastPointerType==='mouse') ? MAG_ZOOM_DESKTOP : MAG_ZOOM_TOUCH;
   // cx,cy = canvas coords of cursor
   const srcX=(cx-panX-iX)/scale - MAG_R/MAG_ZOOM;
   const srcY=(cy-panY-iY)/scale - MAG_R/MAG_ZOOM;
@@ -2313,7 +2408,7 @@ document.getElementById('export-btn').addEventListener('click', async () => {
 // ═══════════════════════════════════════════════
 var _activeTab = 'img';
 function switchTab(t) {
-  if (window.innerWidth > 1024) return;
+  if (window.innerWidth > 1194) return;
   _activeTab = t;
   var cw  = document.getElementById('canvas-wrap');
   var res = document.getElementById('tab-panel-res');
@@ -2328,10 +2423,10 @@ function switchTab(t) {
   if (t === 'img') setTimeout(function(){ initCanvas(); drawImg(); renderOvl(); }, 40);
 }
 window.addEventListener('load', function() {
-  if (window.innerWidth <= 1024) switchTab('img');
+  if (window.innerWidth <= 1194) switchTab('img');
 });
 window.addEventListener('resize', function() {
-  if (window.innerWidth <= 1024) {
+  if (window.innerWidth <= 1194) {
     var hdr = document.querySelector('header');
     var tabs = document.getElementById('tab-bar');
     var hdrH = (hdr ? hdr.offsetHeight : 0) + (tabs ? tabs.offsetHeight : 0);
@@ -2358,7 +2453,7 @@ window.addEventListener('orientationchange', function() {
     var hdrH = (hdr ? hdr.offsetHeight : 0) + (tabs ? tabs.offsetHeight : 0);
     var vh = window.innerHeight;
     var main = document.querySelector('.main');
-    if (main && window.innerWidth <= 1024) {
+    if (main && window.innerWidth <= 1194) {
       var h = (vh - hdrH) + 'px';
       main.style.gridTemplateRows = h;
       main.style.height = h;
@@ -2383,7 +2478,7 @@ window.addEventListener('orientationchange', function() {
   var orig = document.getElementById('analyse-btn');
   if (!orig) return;
   orig.addEventListener('click', function(){
-    if (window.innerWidth > 1024) return;
+    if (window.innerWidth > 1194) return;
     setTimeout(function(){
       var old = document.getElementById('_toast');
       if (old) old.remove();
@@ -2424,8 +2519,8 @@ window.addEventListener('orientationchange', function() {
   }
 
   // Find nearest PLACED landmark within hitR canvas pixels
-  function nearest(cx,cy){
-    var HIT=22, best=null, bestD=HIT*HIT;
+  function nearest(cx,cy,hitR){
+    var HIT=hitR||40, best=null, bestD=HIT*HIT;
     var r=rel(cx,cy);
     LM.forEach(function(lm){
       if(!pts[lm.id]) return;
@@ -2437,9 +2532,9 @@ window.addEventListener('orientationchange', function() {
   }
 
   // Find nearest occ handle within hitR
-  function nearestOcc(cx,cy){
+  function nearestOcc(cx,cy,hitR){
     if(!occPlane) return null;
-    var HIT=22, r=rel(cx,cy);
+    var HIT=hitR||40, r=rel(cx,cy);
     var c1=toC(occPlane.p1.x,occPlane.p1.y);
     var c2=toC(occPlane.p2.x,occPlane.p2.y);
     var d1=Math.sqrt(Math.pow(r.x-c1.x,2)+Math.pow(r.y-c1.y,2));
@@ -2458,10 +2553,12 @@ window.addEventListener('orientationchange', function() {
 
     if(calibrating) return; // calibration handled on pointerup
 
-    var dot=nearest(e.clientX,e.clientY);
+    // Apple Pencil gets tighter hit radius; finger gets wider
+    var hitR = e.pointerType==='pen' ? 18 : 40;
+    var dot=nearest(e.clientX,e.clientY,hitR);
     if(dot){ _drag=dot; setActive(dot); return; }
 
-    var occ=nearestOcc(e.clientX,e.clientY);
+    var occ=nearestOcc(e.clientX,e.clientY,hitR);
     if(occ){ _dragOcc=occ; return; }
 
     _pan=true;
@@ -2469,20 +2566,24 @@ window.addEventListener('orientationchange', function() {
     _po={x:panX,y:panY};
   },{passive:false});
 
+  var _ptrType = 'touch'; // track current pointer type for move threshold
+
   // ── POINTER MOVE ────────────────────────────
   svg.addEventListener('pointermove', function(e){
     if(e.pointerType==='mouse') return;
     e.preventDefault();
 
     var p=rel(e.clientX,e.clientY);
-    // Feed magnifier
+    // Feed magnifier — use higher zoom for touch, standard for pen
     smoothX=p.x; smoothY=p.y;
     mouseCanvasX=p.x; mouseCanvasY=p.y;
     if(showMag && imgEl) drawMag(p.x,p.y);
 
-    // Only count as moved if significant (avoids accidental drag on tap)
+    // Pen (Apple Pencil) needs only 2px before counting as drag
+    // Finger needs 8px to avoid tremor being mistaken for pan
+    var moveThresh = (e.pointerType==='pen') ? 2 : 8;
     var dx=e.clientX-_ps.x, dy=e.clientY-_ps.y;
-    if(Math.sqrt(dx*dx+dy*dy)>3) _moved=true;
+    if(Math.sqrt(dx*dx+dy*dy)>moveThresh) _moved=true;
 
     if(_drag){
       let n=toN(p.x,p.y);
@@ -2549,6 +2650,26 @@ window.addEventListener('orientationchange', function() {
         snapState();
         pts[activeLm]={x:n.x,y:n.y};
         markPlaced(activeLm);
+        // Visual confirmation ring at tap position
+        (function showTapRing(nx,ny){
+          var rc=toC(nx,ny);
+          var ring=document.createElementNS('http://www.w3.org/2000/svg','circle');
+          ring.setAttribute('cx',rc.x);ring.setAttribute('cy',rc.y);
+          ring.setAttribute('r',8);ring.setAttribute('fill','none');
+          ring.setAttribute('stroke',getCol(activeLm));ring.setAttribute('stroke-width','2');
+          ring.setAttribute('opacity','0.9');ring.setAttribute('pointer-events','none');
+          svg.appendChild(ring);
+          var start=null;
+          function animate(ts){
+            if(!start) start=ts;
+            var p=(ts-start)/400;
+            if(p>=1){svg.removeChild(ring);return;}
+            ring.setAttribute('r',8+p*18);
+            ring.setAttribute('opacity',(1-p)*0.9);
+            requestAnimationFrame(animate);
+          }
+          requestAnimationFrame(animate);
+        })(n.x,n.y);
         var idx=LM.findIndex(function(l){return l.id===activeLm;});
         var next=LM.slice(idx+1).find(function(l){return !pts[l.id];});
         if(next) setActive(next.id);
