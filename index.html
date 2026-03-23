@@ -345,13 +345,13 @@
 
   /* ═══ iPAD AIR LANDSCAPE (1180×820) ══════════ */
   @media(min-width:1025px) and (max-width:1194px) and (orientation:landscape){
-    #tab-bar{display:flex;}
+    #tab-bar{display:none !important;}
     body{overflow:hidden;}
     .main{
       display:grid !important;
-      grid-template-columns:230px 1fr !important;
-      grid-template-rows:calc(100dvh - 94px) !important;
-      height:calc(100dvh - 94px) !important;
+      grid-template-columns:200px 1fr 240px !important;
+      grid-template-rows:calc(100dvh - 48px) !important;
+      height:calc(100dvh - 48px) !important;
       overflow:hidden !important;
     }
     .panel-left{
@@ -362,55 +362,62 @@
       overflow-y:auto;
       border-right:1px solid var(--border);
     }
-    .canvas-wrap,
-    .panel-right{grid-row:1;grid-column:2;}
-    .canvas-wrap{display:flex !important;position:relative;width:100%;height:100%;}
-    .panel-right{display:none !important;}
-    .panel-right.tab-active{display:block !important;overflow-y:auto;height:100%;}
-    .canvas-wrap.tab-active{display:flex !important;}
+    .canvas-wrap{
+      display:flex !important;
+      grid-row:1;grid-column:2;
+      position:relative;width:100%;height:100%;
+    }
+    .panel-right{
+      display:block !important;
+      grid-row:1;grid-column:3;
+      overflow-y:auto;
+      height:100%;
+      border-left:1px solid var(--border);
+    }
     header{padding:0 16px !important;height:48px !important;}
     header h1{font-size:.88rem !important;}
     header h1 em{display:none;}
-    #tab-bar{height:46px !important;}
-    #tab-bar .tab-btn{height:46px !important;font-size:.7rem;padding:0 16px;font-weight:600 !important;}
     /* Toolbar — fixed bottom */
     .toolbar{
       position:fixed !important;
       bottom:max(8px,env(safe-area-inset-bottom,8px));
-      left:238px;right:8px;
+      left:208px;right:248px;
       transform:none;width:auto;
-      max-width:calc(100vw - 250px);
       overflow-x:auto;gap:4px;padding:4px 8px;z-index:500;
       -webkit-overflow-scrolling:touch;
       scrollbar-width:none;
       border-radius:8px;
     }
     .toolbar::-webkit-scrollbar{display:none;}
-    .tb{font-size:.65rem;padding:0 13px;min-height:44px;min-width:44px;border-radius:6px;}
-    .tb.primary{padding:0 18px;}
-    /* Magnifier */
+    .tb{font-size:.63rem;padding:0 11px;min-height:42px;min-width:42px;border-radius:6px;}
+    .tb.primary{padding:0 16px;}
+    /* Magnifier — smaller in landscape, avoid overlapping results */
     #magnifier{
       position:fixed !important;
-      top:97px !important;right:12px !important;
-      width:170px;height:170px;z-index:300;
+      top:52px !important;right:252px !important;
+      width:150px;height:150px;z-index:300;
     }
-    #mag-canvas{width:170px !important;height:170px !important;}
-    /* Compact landmark panel in landscape */
-    .lm-item{padding:9px 10px !important;min-height:44px;}
-    .lm-abbr{font-size:.74rem !important;}
-    .lm-name{font-size:.62rem !important;}
-    .pl-head{padding:10px 12px 5px !important;font-size:.61rem !important;}
-    .lm-sep{padding:10px 10px 3px !important;}
-    .pl-footer{padding:8px 12px !important;}
-    .ai-badge-wrap{margin:8px 8px 2px !important;}
-    .ai-badge{font-size:.62rem !important;padding:5px 10px !important;}
+    #mag-canvas{width:150px !important;height:150px !important;}
+    /* Compact landmark panel */
+    .lm-item{padding:8px 10px !important;min-height:42px;}
+    .lm-abbr{font-size:.72rem !important;}
+    .lm-name{font-size:.61rem !important;}
+    .pl-head{padding:9px 10px 4px !important;font-size:.6rem !important;}
+    .lm-sep{padding:9px 10px 3px !important;}
+    .pl-footer{padding:7px 10px !important;}
+    .ai-badge-wrap{margin:7px 8px 2px !important;}
+    .ai-badge{font-size:.6rem !important;padding:4px 8px !important;}
     #patient-name{width:90px;}
     #patient-panel label{display:none;}
     /* Results */
-    .m-row{padding:9px 14px !important;min-height:44px;}
-    .m-name{font-size:.72rem !important;}
-    .m-val{font-size:.7rem !important;}
-    .m-status{font-size:.61rem !important;padding:2px 7px !important;}
+    .m-row{padding:8px 12px !important;min-height:40px;}
+    .m-name{font-size:.68rem !important;}
+    .m-name small{font-size:.56rem !important;}
+    .m-val{font-size:.67rem !important;}
+    .m-status{font-size:.58rem !important;padding:2px 6px !important;}
+    .sec-lbl{padding:8px 12px 4px !important;font-size:.58rem !important;}
+    .res-header{padding:10px 12px 7px !important;}
+    .res-header h2{font-size:.88rem !important;}
   }
 
   /* ═══ SMALL PHONE (≤480px) ═══════════════════ */
@@ -2579,9 +2586,10 @@ window.addEventListener('orientationchange', function() {
     mouseCanvasX=p.x; mouseCanvasY=p.y;
     if(showMag && imgEl) drawMag(p.x,p.y);
 
-    // Pen (Apple Pencil) needs only 2px before counting as drag
-    // Finger needs 8px to avoid tremor being mistaken for pan
-    var moveThresh = (e.pointerType==='pen') ? 2 : 8;
+    // Pen (Apple Pencil): 14px threshold — pencil tip tremor during a tap
+    // easily exceeds 2px, so we need a larger dead-zone than you'd expect.
+    // Finger: 10px threshold.
+    var moveThresh = (e.pointerType==='pen') ? 14 : 10;
     var dx=e.clientX-_ps.x, dy=e.clientY-_ps.y;
     if(Math.sqrt(dx*dx+dy*dy)>moveThresh) _moved=true;
 
