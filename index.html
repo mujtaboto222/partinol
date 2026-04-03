@@ -144,8 +144,13 @@
   #img-canvas{position:absolute;top:0;left:0;z-index:1;}
   #overlay-svg{position:absolute;top:0;left:0;cursor:crosshair;z-index:5;}
 
-  /* magnifier */
+  /* magnifier — draggable & resizable */
   #magnifier{position:absolute;top:14px;right:14px;width:160px;height:160px;border-radius:50%;border:2px solid var(--border);overflow:hidden;background:#000;display:none;pointer-events:none;z-index:30;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+  /* resize handle strip at bottom-right of magnifier */
+  #mag-resize{position:absolute;bottom:0;right:0;width:22px;height:22px;cursor:nwse-resize;z-index:31;display:flex;align-items:flex-end;justify-content:flex-end;padding:3px;pointer-events:auto;}
+  #mag-resize svg{opacity:.5;pointer-events:none;}
+  #mag-drag-handle{position:absolute;inset:0;border-radius:50%;cursor:move;z-index:30;pointer-events:auto;background:transparent;}
+  #magnifier:hover #mag-resize svg{opacity:.9;}
   #mag-canvas{position:absolute;top:0;left:0;}
   #mag-crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:14px;height:14px;pointer-events:none;z-index:2;}
 
@@ -162,8 +167,10 @@
     0%,100%{box-shadow:0 0 6px rgba(59,184,240,.4),0 0 14px rgba(59,184,240,.15);}
     50%{box-shadow:0 0 11px rgba(59,184,240,.7),0 0 24px rgba(59,184,240,.3);}
   }
-  .zoom-lbl{font-size:.62rem;color:var(--muted);display:flex;align-items:center;padding:0 2px;}
+  .tb.active{background:rgba(59,184,240,.15) !important;color:var(--accent) !important;border-color:rgba(59,184,240,.35) !important;}
+  html.light .tb.active{background:rgba(14,165,212,.1) !important;color:var(--accent) !important;}
 
+  .zoom-lbl{font-size:.52rem;color:var(--muted);display:flex;align-items:center;padding:0 1px;min-width:28px;letter-spacing:-.01em;}
   #cursor-svg{position:absolute;pointer-events:none;z-index:40;display:none;}
 
   /* ── Right panel ── */
@@ -222,7 +229,7 @@
 
   
   /* ═══ TABLET TAB BAR ═══════════════════════ */
-  #tab-bar{display:none;flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);}
+  #tab-bar{display:none;flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);align-items:center;padding:0 6px;gap:4px;}
   .tab-btn{flex:1;padding:10px 4px;background:transparent;border:none;border-bottom:2px solid transparent;
     color:var(--muted);font-family:'DM Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:.04em;transition:all .15s;}
   .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -592,7 +599,7 @@
   }
   .tb.primary:hover{background:#5bc8f5 !important;}
   .tb.primary:disabled{opacity:.3 !important;}
-  .zoom-lbl{color:var(--muted) !important;}
+  .zoom-lbl{color:var(--muted) !important;font-size:.5rem !important;min-width:26px !important;letter-spacing:-.01em !important;}
 
   /* Magnifier */
   #magnifier{
@@ -626,7 +633,8 @@
     border-bottom:1px solid #161616 !important;
     padding:6px 12px !important;
   }
-  .m-row:hover{background:#161616 !important;}
+  .m-row:hover{background:#1a1a1a !important;}
+  html.light .m-row:hover{background:var(--s2) !important;}
   .m-name{font-family:'Inter',sans-serif !important;font-size:.7rem !important;color:#ccc !important;}
   .m-name small{color:#555 !important;}
   .m-val{color:#fff !important;font-weight:700 !important;font-family:'Inter',sans-serif !important;}
@@ -700,7 +708,39 @@
   @media(max-width:480px){#patient-panel{display:none;}}
 
   
-  /* ── AI Detection Soon badge ── */
+  /* ── Image adjustment popup ── */
+  #img-adj-popup{
+    position:absolute;bottom:68px;left:50%;transform:translateX(-50%);
+    background:#111;border:1px solid #2a2a2a;border-radius:10px;
+    padding:12px 16px;z-index:50;display:none;white-space:nowrap;
+    box-shadow:0 8px 32px rgba(0,0,0,.8);min-width:220px;
+  }
+  #img-adj-popup.open{display:block;}
+  .adj-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .adj-row:last-child{margin-bottom:0;}
+  .adj-lbl{font-size:.6rem;color:var(--muted);width:68px;flex-shrink:0;font-family:'DM Mono',monospace;}
+  .adj-val{font-size:.6rem;color:var(--accent);font-family:'DM Mono',monospace;width:30px;text-align:right;flex-shrink:0;}
+  .adj-slider{-webkit-appearance:none;appearance:none;flex:1;height:3px;background:#2a2a2a;border-radius:2px;outline:none;cursor:pointer;}
+  .adj-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;}
+  .adj-reset{font-size:.55rem;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:2px;margin-top:4px;display:inline-block;}
+  .adj-reset:hover{color:var(--text);}
+  html.light #img-adj-popup{background:var(--surface);border-color:var(--border);}
+  html.light .adj-slider{background:var(--border);}
+
+  /* ── Results panel entrance animation ── */
+  @keyframes row-in{
+    from{opacity:0;transform:translateY(8px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .m-row-anim{
+    animation:row-in .35s ease both;
+  }
+  @keyframes panel-flash{
+    0%{background:rgba(59,184,240,.12);}
+    100%{background:transparent;}
+  }
+  #results-body.flash{animation:panel-flash .5s ease;}
+
   .ai-badge-wrap{
     display:inline-flex;align-items:center;
     border-radius:5px;flex-shrink:0;
@@ -735,7 +775,14 @@
     0%,100%{opacity:.5;transform:scale(1);}
     50%{opacity:1;transform:scale(1.3);}
   }
-</style><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script></head><body><header><h1><span style="color:var(--accent)">OrthoTimes</span><em>QuickCephTool</em></h1><span style="font-size:.55rem;font-family:'DM Mono',monospace;color:#58a6ff;border:1px solid #58a6ff44;padding:2px 6px;border-radius:3px;letter-spacing:.06em;opacity:.8;">BETA</span><div class="mode-wrap" id="mode-wrap"><span class="chip chip-green" id="mode-chip">Eastman Analysis</span><div id="mode-menu"><div class="mode-item active" data-mode="full"><span class="mode-dot"></span>Eastman Analysis</div><div class="mode-item" data-mode="mcnamara"><span class="mode-dot"></span>McNamara Analysis</div><div class="mode-item" data-mode="downs"><span class="mode-dot"></span>Downs Analysis</div><div class="mode-item" data-mode="steiner"><span class="mode-dot"></span>Steiner Analysis</div><div class="mode-item" data-mode="key"><span class="mode-dot"></span>Key Measurements</div></div></div><span class="hdr-right" id="hdr-hint" style="display:none;"></span><button id="theme-toggle" title="Toggle light / dark mode">☀︎</button><div id="patient-panel"><label>Patient</label><input id="patient-name" type="text" placeholder="Enter name..." maxlength="60" autocomplete="off" spellcheck="false"></div></header><div id="tab-bar"><button class="tab-btn active" id="tab-img" onclick="switchTab('img')">Lateral Cephalogram</button><button class="tab-btn" id="tab-res" onclick="switchTab('res')">Results</button></div><div class="main"><!-- Left --><div class="panel-left" id="tab-panel-lm"><div class="pl-scroll"><div class="ai-badge-wrap"><div class="ai-badge"><span class="ai-badge-dot"></span>AI Detection <span class="ai-badge-soon">soon</span></div></div><div class="pl-head">Landmarks <span style="color:var(--muted);font-size:.58rem">(click to select · click image to place)</span></div><!-- hint box --><div class="hint-box" id="hint-box"><span class="hint-title" id="hint-title"></span><span id="hint-text"></span></div><div id="lm-list"></div></div><div class="pl-footer"><div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div><div class="prog-text"><span id="prog-count">0</span>/24 placed &nbsp;·&nbsp; <span id="prog-remain">24 remaining</span></div></div></div><!-- Canvas --><div class="canvas-wrap" id="canvas-wrap"><div id="drop-zone"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="opacity:.25"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div style="opacity:.55;font-size:.78rem">Upload lateral cephalogram</div><div style="opacity:.35;font-size:.62rem">Click or drag &amp; drop · JPG / PNG / WEBP</div><input type="file" id="upload-input" accept="image/*"></div><div id="canvas-container"><canvas id="img-canvas"></canvas><canvas id="grid-canvas" style="position:absolute;top:0;left:0;pointer-events:none;display:none;z-index:2;"></canvas><svg id="overlay-svg" xmlns="http://www.w3.org/2000/svg"></svg><!-- custom crosshair cursor --><svg id="cursor-svg" width="24" height="24" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="8" stroke="#fff" stroke-width="1.5" opacity=".9"/><line x1="12" y1="16" x2="12" y2="22" stroke="#fff" stroke-width="1.5" opacity=".9"/><line x1="2" y1="12" x2="8" y2="12" stroke="#fff" stroke-width="1.5" opacity=".9"/><line x1="16" y1="12" x2="22" y2="12" stroke="#fff" stroke-width="1.5" opacity=".9"/><circle cx="12" cy="12" r="3" fill="none" stroke="#fff" stroke-width="1.5" opacity=".9"/><circle cx="12" cy="12" r="1" fill="#fff" opacity=".9"/></svg></div><!-- Calibration overlay banner --><div id="calib-banner"><strong id="calib-step">Click point 1</strong> &nbsp;of a known distance on the image</div><!-- AI detection overlay --><div id="ai-overlay" style="display:none;position:absolute;inset:0;background:rgba(13,17,23,.88);z-index:60;flex-direction:column;align-items:center;justify-content:center;gap:14px;backdrop-filter:blur(2px);"><div style="width:36px;height:36px;border:2px solid #30363d;border-top-color:#3fb950;border-radius:50%;animation:spin .8s linear infinite;"></div><div id="ai-status" style="font-size:.75rem;color:#3fb950;letter-spacing:.04em;">Detecting landmarks…</div><div id="ai-sub" style="font-size:.62rem;color:#7d8590;max-width:260px;text-align:center;">HRNet model is analysing the cephalogram</div><div style="width:180px;height:3px;background:#30363d;border-radius:2px;overflow:hidden;"><div id="ai-prog" style="height:100%;background:linear-gradient(90deg,#3fb950,#58a6ff);border-radius:2px;width:0%;transition:width .5s;"></div></div></div><!-- Magnifier --><div id="magnifier"><canvas id="mag-canvas" width="160" height="160"></canvas><svg id="mag-crosshair" width="14" height="14" viewBox="0 0 14 14"><line x1="7" y1="0" x2="7" y2="14" stroke="rgba(255,80,80,.9)" stroke-width="1"/><line x1="0" y1="7" x2="14" y2="7" stroke="rgba(255,80,80,.9)" stroke-width="1"/><circle cx="7" cy="7" r="2.5" fill="none" stroke="rgba(255,80,80,.9)" stroke-width="1"/></svg></div><div class="toolbar" id="toolbar" style="display:none;"><button class="tb" id="zoom-in">＋</button><button class="tb" id="zoom-out">－</button><button class="tb" id="fit-btn">Fit</button><span class="zoom-lbl" id="zoom-lbl">100%</span><button class="tb" id="lines-btn">Lines ON</button><button class="tb" id="grid-btn">⊞ Grid OFF</button><button class="tb" id="mag-btn">🔍 Magnifier ON</button><button class="tb" id="calib-btn" title="Click two points of known distance to calibrate mm scale">Calibrate</button><button class="tb" id="clear-btn">Clear</button><button class="tb primary" id="analyse-btn" disabled>Analyse</button></div><div class="pt-tip" id="pt-tip"></div></div><!-- Right --><div class="panel-right" id="tab-panel-res"><div class="res-header"><h2>Analysis Results</h2><p>hover points to see names</p><button id="export-btn" style="display:none;margin-top:7px;width:100%;font-family:'DM Mono',monospace;font-size:.66rem;padding:5px 0;border-radius:5px;border:1px solid rgba(88,166,255,.35);background:rgba(88,166,255,.1);color:var(--accent);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(88,166,255,.2)'" onmouseout="this.style.background='rgba(88,166,255,.1)'">⬇ Export PDF Report</button></div><div id="results-body"><div class="res-placeholder">Place all 24 landmarks,<br>then click <strong>▶ Analyse</strong>.<br><br><span style="color:var(--accent);opacity:.6;font-size:.65rem">Use the magnifier for precision.<br>Drag any placed point to adjust.</span></div></div></div></div><script>
+</style><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script></head><body><header><h1><span style="color:var(--accent)">OrthoTimes</span><em>QuickCephTool</em></h1><span style="font-size:.55rem;font-family:'DM Mono',monospace;color:#58a6ff;border:1px solid #58a6ff44;padding:2px 6px;border-radius:3px;letter-spacing:.06em;opacity:.8;">BETA</span><div class="mode-wrap" id="mode-wrap"><span class="chip chip-green" id="mode-chip">Eastman Analysis</span><div id="mode-menu"><div class="mode-item active" data-mode="full"><span class="mode-dot"></span>Eastman Analysis</div><div class="mode-item" data-mode="mcnamara"><span class="mode-dot"></span>McNamara Analysis</div><div class="mode-item" data-mode="downs"><span class="mode-dot"></span>Downs Analysis</div><div class="mode-item" data-mode="steiner"><span class="mode-dot"></span>Steiner Analysis</div><div class="mode-item" data-mode="key"><span class="mode-dot"></span>Key Measurements</div></div></div><button id="theme-toggle" title="Switch to light mode"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button><span class="hdr-right" id="hdr-hint"></span><div id="patient-panel"><label>Patient</label><input id="patient-name" type="text" placeholder="Enter name..." maxlength="60" autocomplete="off" spellcheck="false"></div></header><div id="tab-bar"><button class="tab-btn active" id="tab-img" onclick="switchTab('img')">Lateral Cephalogram</button><button class="tab-btn" id="tab-res" onclick="switchTab('res')">Results</button></div><div class="main"><!-- Left --><div class="panel-left" id="tab-panel-lm"><div class="pl-scroll"><div class="ai-badge-wrap"><div class="ai-badge"><span class="ai-badge-dot"></span>AI Detection <span class="ai-badge-soon">soon</span></div></div><div class="pl-head">Landmarks <span style="color:var(--muted);font-size:.58rem">(click to select · click image to place)</span></div><!-- hint box --><div class="hint-box" id="hint-box"><span class="hint-title" id="hint-title"></span><span id="hint-text"></span></div><div id="lm-list"></div></div><div class="pl-footer"><div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div><div class="prog-text"><span id="prog-count">0</span>/24 placed &nbsp;·&nbsp; <span id="prog-remain">24 remaining</span></div></div></div><!-- Canvas --><div class="canvas-wrap" id="canvas-wrap"><div id="drop-zone"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="opacity:.25"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div style="opacity:.55;font-size:.78rem">Upload lateral cephalogram</div><div style="opacity:.35;font-size:.62rem">Click or drag &amp; drop · JPG / PNG / WEBP</div><input type="file" id="upload-input" accept="image/*"></div><div id="canvas-container"><canvas id="img-canvas"></canvas><canvas id="grid-canvas" style="position:absolute;top:0;left:0;pointer-events:none;display:none;z-index:2;"></canvas><svg id="overlay-svg" xmlns="http://www.w3.org/2000/svg"></svg><!-- custom crosshair cursor --><svg id="cursor-svg" width="24" height="24" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="8" stroke="#fff" stroke-width="1.5" opacity=".9"/><line x1="12" y1="16" x2="12" y2="22" stroke="#fff" stroke-width="1.5" opacity=".9"/><line x1="2" y1="12" x2="8" y2="12" stroke="#fff" stroke-width="1.5" opacity=".9"/><line x1="16" y1="12" x2="22" y2="12" stroke="#fff" stroke-width="1.5" opacity=".9"/><circle cx="12" cy="12" r="3" fill="none" stroke="#fff" stroke-width="1.5" opacity=".9"/><circle cx="12" cy="12" r="1" fill="#fff" opacity=".9"/></svg></div><!-- Calibration overlay banner --><div id="calib-banner"><strong id="calib-step">Click point 1</strong> &nbsp;of a known distance on the image</div><!-- AI detection overlay --><div id="ai-overlay" style="display:none;position:absolute;inset:0;background:rgba(13,17,23,.88);z-index:60;flex-direction:column;align-items:center;justify-content:center;gap:14px;backdrop-filter:blur(2px);"><div style="width:36px;height:36px;border:2px solid #30363d;border-top-color:#3fb950;border-radius:50%;animation:spin .8s linear infinite;"></div><div id="ai-status" style="font-size:.75rem;color:#3fb950;letter-spacing:.04em;">Detecting landmarks…</div><div id="ai-sub" style="font-size:.62rem;color:#7d8590;max-width:260px;text-align:center;">HRNet model is analysing the cephalogram</div><div style="width:180px;height:3px;background:#30363d;border-radius:2px;overflow:hidden;"><div id="ai-prog" style="height:100%;background:linear-gradient(90deg,#3fb950,#58a6ff);border-radius:2px;width:0%;transition:width .5s;"></div></div></div><!-- Magnifier --><div id="magnifier"><canvas id="mag-canvas" width="160" height="160"></canvas><svg id="mag-crosshair" width="14" height="14" viewBox="0 0 14 14"><line x1="7" y1="0" x2="7" y2="14" stroke="rgba(255,80,80,.9)" stroke-width="1"/><line x1="0" y1="7" x2="14" y2="7" stroke="rgba(255,80,80,.9)" stroke-width="1"/><circle cx="7" cy="7" r="2.5" fill="none" stroke="rgba(255,80,80,.9)" stroke-width="1"/></svg><div id="mag-resize"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="10" x2="10" y2="3"/><line x1="6" y1="10" x2="10" y2="6"/></svg></div></div><div class="toolbar" id="toolbar" style="display:none;"><button class="tb" id="zoom-in">＋</button><button class="tb" id="zoom-out">－</button><button class="tb" id="fit-btn">Fit</button><span class="zoom-lbl" id="zoom-lbl">100%</span><button class="tb" id="adj-btn" title="Adjust image brightness & contrast">☀ Adjust</button><button class="tb" id="lines-btn">Lines ON</button><button class="tb" id="grid-btn">⊞ Grid OFF</button><button class="tb" id="mag-btn" title="Toggle magnifier"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>Magnifier ON</button><button class="tb" id="calib-btn" title="Click two points of known distance to calibrate mm scale">Calibrate</button><button class="tb" id="clear-btn">Clear</button><button class="tb primary" id="analyse-btn" disabled>Analyse</button></div>
+<!-- Image adjustment popup -->
+<div id="img-adj-popup">
+  <div class="adj-row"><span class="adj-lbl">Brightness</span><input class="adj-slider" id="adj-brightness" type="range" min="-100" max="100" value="0"><span class="adj-val" id="adj-brightness-val">0</span></div>
+  <div class="adj-row"><span class="adj-lbl">Contrast</span><input class="adj-slider" id="adj-contrast" type="range" min="-100" max="100" value="0"><span class="adj-val" id="adj-contrast-val">0</span></div>
+  <div class="adj-row"><span class="adj-lbl">Invert</span><input type="checkbox" id="adj-invert" style="accent-color:var(--accent);cursor:pointer;"><span style="font-size:.6rem;color:var(--muted);margin-left:4px;font-family:'DM Mono',monospace;">B/W negative</span></div>
+  <span class="adj-reset" id="adj-reset">Reset</span>
+</div><div class="pt-tip" id="pt-tip"></div></div><!-- Right --><div class="panel-right" id="tab-panel-res"><div class="res-header"><h2>Analysis Results</h2><p>hover points to see names</p><button id="export-btn" style="display:none;margin-top:7px;width:100%;font-family:'DM Mono',monospace;font-size:.66rem;padding:5px 0;border-radius:5px;border:1px solid rgba(88,166,255,.35);background:rgba(88,166,255,.1);color:var(--accent);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(88,166,255,.2)'" onmouseout="this.style.background='rgba(88,166,255,.1)'">⬇ Export PDF Report</button></div><div id="results-body"><div class="res-placeholder">Place all 24 landmarks,<br>then click <strong>▶ Analyse</strong>.<br><br><span style="color:var(--accent);opacity:.6;font-size:.65rem">Use the magnifier for precision.<br>Drag any placed point to adjust.</span></div></div></div></div><script>
 // ═══════════════════════════════════════════════
 // LANDMARK DATA with anatomical hints
 // ═══════════════════════════════════════════════
@@ -1414,7 +1461,7 @@ function loadImg(file){
       // On tablet, auto-enable magnifier for precise stylus placement
       if(window.innerWidth <= 1194 && window.matchMedia('(pointer:coarse)').matches){
         showMag=true;
-        document.getElementById('mag-btn').textContent='🔍 Magnifier ON';
+        document.getElementById('mag-btn').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>Magnifier ON';
       }
       // Auto-enable grid on image load
       showGrid=true;
@@ -1469,10 +1516,20 @@ function fitImg(){
   iW=imgEl.naturalWidth*scale;iH=imgEl.naturalHeight*scale;
   iX=(cW-iW)/2;iY=(cH-iH)/2;panX=0;panY=0;updZoom();
 }
+let imgBrightness=0, imgContrast=0, imgInvert=false;
+
 function drawImg(){
   ctx.clearRect(0,0,cW,cH);
   ctx.save();ctx.translate(panX,panY);
-  ctx.drawImage(imgEl,iX,iY,iW,iH);ctx.restore();
+  // Build CSS filter string for brightness/contrast
+  const bPct = 100 + imgBrightness; // 0-200%, 100 = normal
+  const cPct = 100 + imgContrast;
+  let filterStr = `brightness(${bPct}%) contrast(${cPct}%)`;
+  if(imgInvert) filterStr += ' invert(1) grayscale(1)';
+  ctx.filter = filterStr;
+  ctx.drawImage(imgEl,iX,iY,iW,iH);
+  ctx.filter = 'none';
+  ctx.restore();
   if(showGrid) drawGrid();
 }
 
@@ -1485,10 +1542,12 @@ function drawGrid(){
   gridCanvas.height = cH;
   gridCtx.clearRect(0,0,cW,cH);
 
-  // Grid spans the image area, spacing every ~5% of image width
-  const DIVISIONS = 20; // 20×20 grid
-  const stepX = iW / DIVISIONS;
-  const stepY = iH / DIVISIONS;
+  // Grid spans the image area — strictly square cells
+  // Use the same pixel step for both axes (based on the shorter dimension)
+  const DIVISIONS = 20;
+  const stepBase = Math.min(iW, iH) / DIVISIONS;
+  const stepX = stepBase;
+  const stepY = stepBase;
 
   // Image bounds on canvas (with pan)
   const x0 = iX + panX, y0 = iY + panY;
@@ -1502,11 +1561,19 @@ function drawGrid(){
   gridCtx.lineWidth = 0.5;
   gridCtx.setLineDash([]);
 
-  for(let i = 0; i <= DIVISIONS; i++){
+  // Draw vertical lines across full image width
+  const colCount = Math.ceil(iW / stepX);
+  for(let i = 0; i <= colCount; i++){
     const x = x0 + i * stepX;
-    gridCtx.beginPath(); gridCtx.moveTo(x, y0); gridCtx.lineTo(x, y1); gridCtx.stroke();
+    if(x > x1 + 1) break;
+    gridCtx.beginPath(); gridCtx.moveTo(Math.min(x,x1), y0); gridCtx.lineTo(Math.min(x,x1), y1); gridCtx.stroke();
+  }
+  // Draw horizontal lines across full image height
+  const rowCount = Math.ceil(iH / stepY);
+  for(let i = 0; i <= rowCount; i++){
     const y = y0 + i * stepY;
-    gridCtx.beginPath(); gridCtx.moveTo(x0, y); gridCtx.lineTo(x1, y); gridCtx.stroke();
+    if(y > y1 + 1) break;
+    gridCtx.beginPath(); gridCtx.moveTo(x0, Math.min(y,y1)); gridCtx.lineTo(x1, Math.min(y,y1)); gridCtx.stroke();
   }
 
   // Thicker midlines (centre cross)
@@ -1534,26 +1601,26 @@ const toN=(cx,cy)=>({x:(cx-panX-iX)/iW,y:(cy-panY-iY)/iH});
 // ═══════════════════════════════════════════════
 // MAGNIFIER
 // ═══════════════════════════════════════════════
-const MAG_ZOOM_DESKTOP=4, MAG_ZOOM_TOUCH=6, MAG_R=80;
+const MAG_ZOOM_DESKTOP=4, MAG_ZOOM_TOUCH=6;
 function drawMag(cx,cy){
-  // Use higher zoom on touch/pen for more precision
   var MAG_ZOOM = (_lastPointerType==='mouse') ? MAG_ZOOM_DESKTOP : MAG_ZOOM_TOUCH;
-  // cx,cy = canvas coords of cursor
+  var MAG_R = window._magR || 80;
+  var MAG_D = MAG_R * 2;
   const srcX=(cx-panX-iX)/scale - MAG_R/MAG_ZOOM;
   const srcY=(cy-panY-iY)/scale - MAG_R/MAG_ZOOM;
   const srcW=MAG_R*2/MAG_ZOOM,srcH=MAG_R*2/MAG_ZOOM;
-  magCtx.clearRect(0,0,160,160);
+  magCtx.clearRect(0,0,MAG_D,MAG_D);
   magCtx.save();
-  magCtx.beginPath();magCtx.arc(80,80,80,0,Math.PI*2);magCtx.clip();
-  magCtx.drawImage(imgEl,srcX,srcY,srcW,srcH,0,0,160,160);
+  magCtx.beginPath();magCtx.arc(MAG_R,MAG_R,MAG_R,0,Math.PI*2);magCtx.clip();
+  magCtx.drawImage(imgEl,srcX,srcY,srcW,srcH,0,0,MAG_D,MAG_D);
   // draw existing points on mag
   LM.forEach(lm=>{
     if(!pts[lm.id])return;
     const imgPx=pts[lm.id].x*imgEl.naturalWidth;
     const imgPy=pts[lm.id].y*imgEl.naturalHeight;
-    const relX=(imgPx-srcX)/srcW*160;
-    const relY=(imgPy-srcY)/srcH*160;
-    if(relX>0&&relX<160&&relY>0&&relY<160){
+    const relX=(imgPx-srcX)/srcW*MAG_D;
+    const relY=(imgPy-srcY)/srcH*MAG_D;
+    if(relX>0&&relX<MAG_D&&relY>0&&relY<MAG_D){
       const col=getCol(lm.id);
       magCtx.beginPath();magCtx.arc(relX,relY,3,0,Math.PI*2);
       magCtx.fillStyle=col;magCtx.fill();
@@ -1626,15 +1693,45 @@ function renderOvl(){
 }
 function drawLines(){
   const p={};LM.forEach(l=>{if(pts[l.id])p[l.id]=pts[l.id];});
-  [['S','N','#58a6ff',1.5,[]],['S','Ba','#58a6ff',1,[4,3]],
-   ['Po','Or','#8fafc8',1,[4,3]],['ANS','PNS','#3fb950',1.2,[]],['Go','Me','#f0883e',1.2,[]],
-   ['U1tip','U1ap','#3fb950',1.5,[]],['L1tip','L1ap','#f0883e',1.5,[]],
-   ['A','Pog','#e8c06c',1,[5,3]],['N','Gn','#bc8cff',1,[3,3]],['Prn','Pogp','#bc8cff',1,[4,3]]
-  ].forEach(([a,b,col,w,dash])=>{
+
+  // Helper: draw a line between two landmark ids
+  function ln(a,b,col,w,dash){
     if(!p[a]||!p[b])return;
     const ca=toC(p[a].x,p[a].y),cb=toC(p[b].x,p[b].y);
-    svg.appendChild(mkEl('line',{x1:ca.x,y1:ca.y,x2:cb.x,y2:cb.y,stroke:col,'stroke-width':w,opacity:.5,'stroke-dasharray':dash.join(' '),'pointer-events':'none'}));
-  });
+    svg.appendChild(mkEl('line',{x1:ca.x,y1:ca.y,x2:cb.x,y2:cb.y,
+      stroke:col,'stroke-width':w,opacity:.55,
+      'stroke-dasharray':dash?dash.join(' '):'','pointer-events':'none'}));
+  }
+
+  // ── Cranial base & reference planes ──────────
+  ln('S','N',  '#58a6ff',1.5,[]);        // SN line
+  ln('S','Ba', '#58a6ff',1,[4,3]);       // cranial base
+  ln('Po','Or','#8fafc8',1,[4,3]);       // Frankfort horizontal
+  ln('N','Ba', '#4480cc',1,[3,4]);       // N-Ba (facial axis)
+
+  // ── Maxillary structures ──────────────────────
+  ln('ANS','PNS','#3fb950',1.2,[]);      // palatal plane
+  ln('N','A',    '#3fb950',1,[5,3]);     // N-A line
+  ln('A','Pog',  '#e8c06c',1,[5,3]);     // A-Pog line
+
+  // ── Mandibular structures ─────────────────────
+  ln('Go','Me',  '#f0883e',1.2,[]);      // mandibular plane
+  ln('Go','Gn',  '#f0883e',1,[4,3]);     // Go-Gn (Steiner mandibular plane)
+  ln('N','B',    '#f0883e',1,[5,3]);     // N-B line
+  ln('N','Pog',  '#e8a0ff',1,[4,3]);     // facial plane N-Pog
+  ln('S','Gn',   '#d0a0ff',1,[3,4]);     // Y-axis (growth axis)
+
+  // ── Incisor long axes ─────────────────────────
+  ln('U1tip','U1ap','#3fb950',1.5,[]);   // upper incisor axis
+  ln('L1tip','L1ap','#f0883e',1.5,[]);   // lower incisor axis
+
+  // ── Soft tissue ───────────────────────────────
+  ln('Prn','Pogp','#bc8cff',1,[4,3]);    // E-line (esthetic line)
+
+  // ── McNamara specific ─────────────────────────
+  ln('Co','A',  '#a0d0ff',1,[3,4]);      // effective maxillary length
+  ln('Co','Gn', '#ffd0a0',1,[3,4]);      // effective mandibular length
+  ln('PNS','Gn','#d0ffd0',1,[3,4]);      // facial axis (PNS-Gn)
 }
 
 // ═══════════════════════════════════════════════
@@ -1842,9 +1939,52 @@ document.getElementById('grid-btn').addEventListener('click',function(){
 });
 document.getElementById('mag-btn').addEventListener('click',function(){
   showMag=!showMag;
-  this.textContent=showMag?'🔍 Magnifier ON':'🔍 Magnifier OFF';
+  this.innerHTML=showMag ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>Magnifier ON' : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>Magnifier OFF';
   mag.style.display=showMag?'block':'none';
 });
+
+// ── Image adjustment popup ──────────────────────
+(function(){
+  const adjBtn = document.getElementById('adj-btn');
+  const popup  = document.getElementById('img-adj-popup');
+  const bSlider = document.getElementById('adj-brightness');
+  const cSlider = document.getElementById('adj-contrast');
+  const bVal    = document.getElementById('adj-brightness-val');
+  const cVal    = document.getElementById('adj-contrast-val');
+  const invChk  = document.getElementById('adj-invert');
+  const resetBtn= document.getElementById('adj-reset');
+
+  adjBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    popup.classList.toggle('open');
+    adjBtn.classList.toggle('active', popup.classList.contains('open'));
+  });
+  document.addEventListener('click', function(e){
+    if(!popup.contains(e.target) && e.target !== adjBtn){
+      popup.classList.remove('open');
+      adjBtn.classList.remove('active');
+    }
+  });
+
+  function applyAdj(){
+    imgBrightness = parseInt(bSlider.value);
+    imgContrast   = parseInt(cSlider.value);
+    imgInvert     = invChk.checked;
+    bVal.textContent = (imgBrightness >= 0 ? '+' : '') + imgBrightness;
+    cVal.textContent = (imgContrast  >= 0 ? '+' : '') + imgContrast;
+    if(imgEl) drawImg();
+  }
+  bSlider.addEventListener('input', applyAdj);
+  cSlider.addEventListener('input', applyAdj);
+  invChk.addEventListener('change', applyAdj);
+
+  resetBtn.addEventListener('click', function(){
+    bSlider.value = 0; cSlider.value = 0; invChk.checked = false;
+    bVal.textContent = '0'; cVal.textContent = '0';
+    imgBrightness = 0; imgContrast = 0; imgInvert = false;
+    if(imgEl) drawImg();
+  });
+})();
 document.getElementById('clear-btn').addEventListener('click',()=>{
   if(!confirm('Clear all landmarks?'))return;
   pts={};
@@ -2056,7 +2196,13 @@ document.getElementById('analyse-btn').addEventListener('click',()=>{
     : (p.S && p.N ? `S-N = ${SN_MM} mm (auto)` : null);
 
   const body = document.getElementById('results-body');
-  body.innerHTML = '';
+
+  // ── Transition: fade out old results, then populate ──
+  body.style.transition = 'opacity 0.25s ease';
+  body.style.opacity = '0';
+
+  setTimeout(() => {
+    body.innerHTML = '';
 
   // Mode badge
   const modeBadge = document.createElement('div');
@@ -2093,6 +2239,7 @@ document.getElementById('analyse-btn').addEventListener('click',()=>{
     MEAS;
 
   let cur = '';
+  let rowIndex = 0;
   activeMeas.forEach(m=>{
     let val;
     try{ val = m.c(p); }catch(e){ val = null; }
@@ -2115,7 +2262,10 @@ document.getElementById('analyse-btn').addEventListener('click',()=>{
     const st = hasValue ? classify(val, m.norm[0], m.norm[1]) : null;
     const col = !st ? 'var(--muted)' : st.c==='sn'?'var(--accent)':st.c==='sh'?'var(--warn)':'var(--green)';
 
-    const row = document.createElement('div'); row.className = 'm-row';
+    const row = document.createElement('div');
+    row.className = 'm-row m-row-anim';
+    row.style.animationDelay = (rowIndex * 40) + 'ms';
+    rowIndex++;
     row.innerHTML = `
       <div class="m-name">${m.n}<small>${m.d}</small></div><div><div class="m-val" style="color:${col}">${hasValue ? val.toFixed(1)+m.u : '–'}</div><div class="m-norm">${m.norm[0]}${m.u} ±${m.norm[1]}</div></div>
       ${!hasValue
@@ -2126,6 +2276,18 @@ document.getElementById('analyse-btn').addEventListener('click',()=>{
 
   // Show export button now that results exist
   document.getElementById('export-btn').style.display = 'block';
+
+  // Fade results back in
+  body.style.opacity = '0';
+  requestAnimationFrame(() => {
+    body.style.transition = 'opacity 0.35s ease';
+    body.style.opacity = '1';
+  });
+
+  // On tablet, switch to results tab automatically
+  if (window.innerWidth <= 1194) switchTab('res');
+
+  }, 260); // end setTimeout — matches fade-out duration
 });
 
 // ═══════════════════════════════════════════════
@@ -2727,17 +2889,118 @@ window.addEventListener('orientationchange', function() {
 
 buildList();
 
+// ═══════════════════════════════════════════════
+// MAGNIFIER — DRAG & RESIZE
+// ═══════════════════════════════════════════════
+(function(){
+  var magEl    = document.getElementById('magnifier');
+  var magCvs   = document.getElementById('mag-canvas');
+  var resizeEl = document.getElementById('mag-resize');
+  var MIN_SIZE = 80, MAX_SIZE = 380;
+
+  // ── Create a transparent drag-handle ring that sits on TOP of the magnifier
+  // but has pointer-events:auto — the magnifier itself keeps pointer-events:none
+  // so mouse events still reach the SVG overlay underneath for normal operation.
+  var dragHandle = document.createElement('div');
+  dragHandle.id = 'mag-drag-handle';
+  magEl.appendChild(dragHandle);
+
+  function syncMagSize(){
+    var s = parseInt(magEl.style.width) || magEl.offsetWidth || 160;
+    magCvs.width  = s; magCvs.height = s;
+    magCvs.style.width = s+'px'; magCvs.style.height = s+'px';
+    magEl.style.borderRadius = '50%';
+    window._magR = s / 2;
+  }
+
+  // ── DRAG via handle ──────────────────────────
+  var _dragging=false, _dx=0, _dy=0;
+
+  dragHandle.addEventListener('mousedown', function(e){
+    e.preventDefault(); e.stopPropagation();
+    _dragging=true;
+    var r = magEl.getBoundingClientRect();
+    _dx = e.clientX - r.left;
+    _dy = e.clientY - r.top;
+    dragHandle.style.cursor='grabbing';
+  });
+
+  document.addEventListener('mousemove', function(e){
+    if(!_dragging) return;
+    var wrap = document.getElementById('canvas-wrap');
+    var wr   = wrap.getBoundingClientRect();
+    var s    = parseInt(magEl.style.width) || 160;
+    var nx   = Math.max(0, Math.min(e.clientX - wr.left - _dx, wr.width  - s));
+    var ny   = Math.max(0, Math.min(e.clientY - wr.top  - _dy, wr.height - s));
+    magEl.style.left   = nx+'px';
+    magEl.style.top    = ny+'px';
+    magEl.style.right  = 'auto';
+    magEl.style.bottom = 'auto';
+  });
+  document.addEventListener('mouseup', function(){
+    if(_dragging){ _dragging=false; dragHandle.style.cursor='move'; }
+  });
+
+  // ── RESIZE via corner handle ─────────────────
+  var _resizing=false, _rsx=0, _rsy=0, _rsw=0;
+
+  resizeEl.addEventListener('mousedown', function(e){
+    e.preventDefault(); e.stopPropagation();
+    _resizing=true; _rsx=e.clientX; _rsy=e.clientY;
+    _rsw = parseInt(magEl.style.width) || magEl.offsetWidth || 160;
+  });
+  document.addEventListener('mousemove', function(e){
+    if(!_resizing) return;
+    var delta = Math.max(e.clientX-_rsx, e.clientY-_rsy);
+    var ns    = Math.max(MIN_SIZE, Math.min(MAX_SIZE, _rsw+delta));
+    magEl.style.width  = ns+'px';
+    magEl.style.height = ns+'px';
+    syncMagSize();
+  });
+  document.addEventListener('mouseup', function(){
+    if(_resizing){ _resizing=false; syncMagSize(); }
+  });
+
+  // ── Touch drag (tablet / iPad) ───────────────
+  var _tDragging=false, _tdx=0, _tdy=0;
+  dragHandle.addEventListener('touchstart', function(e){
+    e.stopPropagation();
+    _tDragging=true;
+    var r=magEl.getBoundingClientRect();
+    _tdx=e.touches[0].clientX-r.left;
+    _tdy=e.touches[0].clientY-r.top;
+  },{passive:true});
+  document.addEventListener('touchmove', function(e){
+    if(!_tDragging) return;
+    var t=e.touches[0], wrap=document.getElementById('canvas-wrap');
+    var wr=wrap.getBoundingClientRect(), s=parseInt(magEl.style.width)||160;
+    var nx=Math.max(0,Math.min(t.clientX-wr.left-_tdx, wr.width-s));
+    var ny=Math.max(0,Math.min(t.clientY-wr.top-_tdy,  wr.height-s));
+    magEl.style.left=nx+'px'; magEl.style.top=ny+'px';
+    magEl.style.right='auto'; magEl.style.bottom='auto';
+  },{passive:true});
+  document.addEventListener('touchend', function(){ _tDragging=false; });
+
+  // Init
+  magEl.style.width  = '160px';
+  magEl.style.height = '160px';
+  window._magR = 80;
+  syncMagSize();
+})();
+
+
 // ── Theme toggle ─────────────────────────────
 (function(){
   var btn = document.getElementById('theme-toggle');
   var html = document.documentElement;
-  var DARK_ICON = '☀︎';
-  var LIGHT_ICON = '🌙';
+  var SUN  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  var MOON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   var light = false;
+  btn.innerHTML = SUN;
   btn.addEventListener('click', function(){
     light = !light;
     html.classList.toggle('light', light);
-    btn.textContent = light ? LIGHT_ICON : DARK_ICON;
+    btn.innerHTML = light ? MOON : SUN;
     btn.title = light ? 'Switch to dark mode' : 'Switch to light mode';
   });
 })();
