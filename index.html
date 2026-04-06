@@ -2398,6 +2398,76 @@ document.getElementById('export-btn').addEventListener('click', async () => {
     // image — draw at full report size
     oc.drawImage(imgEl, 0, 0, REPORT_W, REPORT_H);
 
+    // Draw lines (same as drawLines() function but on offscreen canvas)
+    if(showLines){
+      const pReport = {};
+      LM.forEach(l => {
+        if(pts[l.id]) pReport[l.id] = {x: pts[l.id].x * REPORT_W, y: pts[l.id].y * REPORT_H};
+      });
+
+      function drawLine(a, b, col, w, dash){
+        if(!pReport[a] || !pReport[b]) return;
+        oc.beginPath();
+        oc.moveTo(pReport[a].x, pReport[a].y);
+        oc.lineTo(pReport[b].x, pReport[b].y);
+        oc.strokeStyle = col;
+        oc.lineWidth = w;
+        oc.globalAlpha = 0.55;
+        if(dash && dash.length > 0) oc.setLineDash(dash);
+        else oc.setLineDash([]);
+        oc.stroke();
+        oc.globalAlpha = 1;
+      }
+
+      // Cranial base & reference planes
+      drawLine('S','N',  '#58a6ff',1.5,[]);
+      drawLine('S','Ba', '#58a6ff',1,[4,3]);
+      drawLine('Po','Or','#8fafc8',1,[4,3]);
+      drawLine('N','Ba', '#4480cc',1,[3,4]);
+
+      // Maxillary structures
+      drawLine('ANS','PNS','#3fb950',1.2,[]);
+      drawLine('N','A',    '#3fb950',1,[5,3]);
+      drawLine('A','Pog',  '#e8c06c',1,[5,3]);
+
+      // Mandibular structures
+      drawLine('Go','Me',  '#f0883e',1.2,[]);
+      drawLine('Go','Gn',  '#f0883e',1,[4,3]);
+      drawLine('N','B',    '#f0883e',1,[5,3]);
+      drawLine('N','Pog',  '#e8a0ff',1,[4,3]);
+      drawLine('S','Gn',   '#d0a0ff',1,[3,4]);
+
+      // Incisor long axes
+      drawLine('U1tip','U1ap','#3fb950',1.5,[]);
+      drawLine('L1tip','L1ap','#f0883e',1.5,[]);
+
+      // Soft tissue
+      drawLine('Prn','Pogp','#bc8cff',1,[4,3]);
+
+      // McNamara specific
+      drawLine('Co','A',  '#a0d0ff',1,[3,4]);
+      drawLine('Co','Gn', '#ffd0a0',1,[3,4]);
+      drawLine('PNS','Gn','#d0ffd0',1,[3,4]);
+
+      oc.setLineDash([]); // reset
+    }
+
+    // Draw occlusal plane if present
+    if(occPlane){
+      const occ1 = {x: occPlane.p1.x * REPORT_W, y: occPlane.p1.y * REPORT_H};
+      const occ2 = {x: occPlane.p2.x * REPORT_W, y: occPlane.p2.y * REPORT_H};
+      oc.beginPath();
+      oc.moveTo(occ1.x, occ1.y);
+      oc.lineTo(occ2.x, occ2.y);
+      oc.strokeStyle = '#e8c06c';
+      oc.lineWidth = 1.8;
+      oc.globalAlpha = 0.75;
+      oc.setLineDash([6,3]);
+      oc.stroke();
+      oc.setLineDash([]);
+      oc.globalAlpha = 1;
+    }
+
     // landmark dots + labels — tiny precise dots for PDF
     const COLORS_MAP = {'Cranial Base':'#58a6ff','Maxilla':'#3fb950','Mandible':'#f0883e','Soft Tissue':'#bc8cff'};
     LM.forEach(lm => {
