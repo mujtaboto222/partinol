@@ -300,6 +300,10 @@
     cursor:pointer;transition:all .15s;
   }
   #fb-btn:hover{background:rgba(59,184,240,0.25);border-color:rgba(59,184,240,0.7);}
+  @keyframes fb-pop{
+    from{opacity:0;transform:translateY(10px) scale(.97);}
+    to  {opacity:1;transform:translateY(0)   scale(1);}
+  }
   #fb-panel{
     position:fixed;bottom:60px;right:20px;z-index:1001;
     width:300px;background:#111;border:1px solid #222;
@@ -307,7 +311,7 @@
     box-shadow:0 8px 32px rgba(0,0,0,0.6);
     display:none;flex-direction:column;gap:10px;
   }
-  #fb-panel.open{display:flex;}
+  #fb-panel.open{display:flex;animation:fb-pop .22s ease-out;}
   #fb-panel h3{font-family:'Inter',sans-serif;font-size:.78rem;font-weight:600;color:#fff;margin:0 0 4px;}
   #fb-panel p{font-size:.6rem;color:#555;margin:0 0 8px;}
   .fb-input{
@@ -327,9 +331,11 @@
   }
   #fb-send:hover{opacity:.85;}
   #fb-thanks{display:none;text-align:center;font-size:.7rem;color:#3bb8f0;padding:10px 0;}
-  #fb-stars{display:flex;gap:4px;margin-bottom:8px;}
+  /* row-reverse so the ~ sibling selector can highlight stars to the LEFT on hover */
+  #fb-stars{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:4px;margin-bottom:8px;}
   .star{font-size:1.4rem;color:#444;cursor:pointer;transition:color .15s;}
-  .star:hover,.star.active{color:#f5c518;}
+  .star:hover,.star:hover~.star{color:#f5c518;}
+  .star.active,.star.active~.star{color:#f5c518;}
 
   /* ── Scale banner (in results panel) ── */
   .scale-banner{margin:4px 15px 0;padding:6px 10px;border-radius:5px;font-size:.61rem;line-height:1.5;}
