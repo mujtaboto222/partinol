@@ -609,6 +609,17 @@ document.addEventListener('keydown', e => {
   }
 });
 let imgEl=null;
+let logoBase64=null;
+(function preloadLogo(){
+  const img=new Image();
+  img.onload=function(){
+    const c=document.createElement('canvas');
+    c.width=img.naturalWidth; c.height=img.naturalHeight;
+    c.getContext('2d').drawImage(img,0,0);
+    logoBase64=c.toDataURL('image/png');
+  };
+  img.src='logo.png';
+})();
 let scale=1,panX=0,panY=0,isPanning=false,panStart={x:0,y:0},panOrigin={x:0,y:0};
 let _panMoved=false;
 let showLines=true,showMag=true,showGrid=false;
@@ -1628,15 +1639,18 @@ document.getElementById('export-btn').addEventListener('click', async () => {
   doc.setLineWidth(0.3);
   doc.line(0, 22, W, 22);
 
-  // Logo text
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(13);
-  setTxt(CLR.accent);
-  doc.text('OrthoTimes', margin, 13);
-  const otW = doc.getTextWidth('OrthoTimes');
-  doc.setFont('helvetica','normal');
-  setTxt(CLR.muted);
-  doc.text(' Pixel Ceph', margin + otW, 13);
+  // Logo image centered in header
+  if(logoBase64){
+    const logoH = 12; // mm tall
+    const logoAspect = 1568 / 336;
+    const logoW = logoH * logoAspect;
+    doc.addImage(logoBase64, 'PNG', (W - logoW) / 2, (22 - logoH) / 2, logoW, logoH);
+  } else {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(13);
+    setTxt(CLR.accent);
+    doc.text('Pixel Ceph', W/2, 13, {align:'center'});
+  }
 
   // Mode badge
   const modeName =
