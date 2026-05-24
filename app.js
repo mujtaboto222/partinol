@@ -2212,11 +2212,39 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
   };
 
   var _aiCooldown = false;
+  var _aiSecs = 0;
+  var _aiTimer = null;
+
+  function _aiShowCountdown(){
+    var existing = document.getElementById('ai-cooldown-toast');
+    if(existing){ existing.remove(); }
+    var t = document.createElement('div');
+    t.id = 'ai-cooldown-toast';
+    t.innerHTML = 'Please wait <span id="ai-cd-num">'+_aiSecs+'</span>s';
+    document.getElementById('panel-lm').appendChild(t);
+  }
+
   document.getElementById('ai-detect-btn').addEventListener('click', function(){
     if(!imgEl){ alert('Please upload an X-ray image first!'); return; }
-    if(_aiCooldown){ return; }
+    if(_aiCooldown){
+      _aiShowCountdown();
+      return;
+    }
     _aiCooldown = true;
-    setTimeout(function(){ _aiCooldown = false; }, 10000);
+    _aiSecs = 10;
+    document.getElementById('ai-detect-btn').classList.add('ai-btn-cooldown');
+    _aiTimer = setInterval(function(){
+      _aiSecs--;
+      var n = document.getElementById('ai-cd-num');
+      if(n) n.textContent = _aiSecs;
+      if(_aiSecs <= 0){
+        clearInterval(_aiTimer);
+        _aiCooldown = false;
+        document.getElementById('ai-detect-btn').classList.remove('ai-btn-cooldown');
+        var t = document.getElementById('ai-cooldown-toast');
+        if(t) t.remove();
+      }
+    }, 1000);
 
     var overlay = document.getElementById('ai-overlay');
     var status  = document.getElementById('ai-status');

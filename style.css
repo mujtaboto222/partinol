@@ -302,8 +302,14 @@
     border:1px solid rgba(139,92,246,.25);
     background:rgba(139,92,246,.06);
     animation:ai-badge-breathe 3s ease-in-out infinite;
-    transition:transform .12s ease,background .12s ease,border-color .12s ease;
+    transition:opacity .3s ease,filter .3s ease,border-color .3s ease,background .3s ease,transform .12s ease;
     user-select:none;cursor:pointer;
+  }
+  .ai-badge-wrap.ai-btn-cooldown{
+    opacity:.35;filter:grayscale(1);
+    border-color:rgba(255,255,255,.08);
+    background:rgba(255,255,255,.03);
+    animation:none;
   }
   .ai-badge-wrap:active{
     transform:scale(0.96);
@@ -314,6 +320,19 @@
     background:rgba(139,92,246,.12);
     border-color:rgba(139,92,246,.4);
   }
+  #ai-cooldown-toast{
+    margin:2px 12px 6px;
+    padding:5px 10px;
+    border-radius:5px;
+    background:rgba(10,14,23,0.9);
+    border:1px solid rgba(255,255,255,.1);
+    color:rgba(255,255,255,.45);
+    font-size:.58rem;font-family:'DM Mono',monospace;
+    display:inline-flex;align-items:center;gap:4px;
+    animation:hint-in .2s ease;
+  }
+  #ai-cooldown-toast span{ color:#3bb8f0; font-weight:700; }
+  @keyframes hint-in{ from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
   .ai-badge{
     display:inline-flex;align-items:center;gap:6px;
     font-family:'Inter',sans-serif;font-size:.58rem;font-weight:500;
@@ -649,25 +668,6 @@
   box-shadow:0 4px 16px rgba(0,0,0,.5);
   animation:toast-in .2s ease;
 }
-#ai-disclaimer-toast{
-  position:fixed;top:64px;left:50%;transform:translateX(-50%);
-  background:#3fb950;
-  border:1px solid rgba(63,185,80,0.8);
-  color:#fff;
-  font-size:.65rem;font-family:'Inter',sans-serif;font-weight:600;
-  padding:10px 20px;border-radius:10px;
-  z-index:9999;white-space:nowrap;
-  display:flex;align-items:center;gap:10px;
-  box-shadow:0 0 18px rgba(63,185,80,.5),0 0 40px rgba(63,185,80,.2);
-  animation:toast-in .3s ease;
-  transition:opacity .6s ease;
-}
-#ai-disclaimer-toast::before{
-  content:'';display:inline-block;width:6px;height:6px;border-radius:50%;
-  background:#fff;flex-shrink:0;
-  box-shadow:0 0 6px rgba(255,255,255,.9);
-}
-#ai-disclaimer-toast.hide{ opacity:0; }
 @keyframes toast-in{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 #header-logo{height:32px !important;width:auto !important;object-fit:contain;margin-right:10px;flex-shrink:0;opacity:.92;}
 #header-brand{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-right:10px;}
