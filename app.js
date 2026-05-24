@@ -2211,8 +2211,32 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
     'UPM':'U4','UMT':'U6','LPM':'L4','LMT':'L6'
   };
 
+  var _aiCooldown = false;
+  var _aiSecs = 0;
+  var _aiCountTimer = null;
+
+  function _aiShowCountdown(){
+    var existing = document.getElementById('ai-cooldown-toast');
+    if(existing){ existing.remove(); }
+    var t = document.createElement('div');
+    t.id = 'ai-cooldown-toast';
+    t.innerHTML = 'Please wait <span id="ai-cd-num">'+_aiSecs+'</span>s';
+    document.getElementById('panel-lm').appendChild(t);
+    if(_aiCountTimer) clearInterval(_aiCountTimer);
+    _aiCountTimer = setInterval(function(){
+      var n = document.getElementById('ai-cd-num');
+      if(n) n.textContent = _aiSecs;
+    }, 500);
+  }
+
   document.getElementById('ai-detect-btn').addEventListener('click', function(){
     if(!imgEl){ alert('Please upload an X-ray image first!'); return; }
+    if(_aiCooldown){
+      _aiShowCountdown();
+      return;
+    }
+    _aiCooldown = true;
+    document.getElementById('ai-detect-btn').classList.add('ai-btn-cooldown');
 
     var overlay = document.getElementById('ai-overlay');
     var status  = document.getElementById('ai-status');
@@ -2384,6 +2408,10 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
           setTimeout(function(){
             cancelAnimationFrame(ringAnim);
             overlay.style.display = 'none';
+            _aiCooldown = false;
+            if(_aiCountTimer) clearInterval(_aiCountTimer);
+            document.getElementById('ai-detect-btn').classList.remove('ai-btn-cooldown');
+            var ct = document.getElementById('ai-cooldown-toast'); if(ct) ct.remove();
             prog.style.width = '0%';
             renderOvl();
             updateProg();
@@ -2401,6 +2429,10 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
         .catch(function(err){
           cancelAnimationFrame(ringAnim);
           overlay.style.display = 'none';
+          _aiCooldown = false;
+          if(_aiCountTimer) clearInterval(_aiCountTimer);
+          document.getElementById('ai-detect-btn').classList.remove('ai-btn-cooldown');
+          var ct = document.getElementById('ai-cooldown-toast'); if(ct) ct.remove();
           prog.style.width = '0%';
           alert('AI detection failed.\n' + err.message);
         });
