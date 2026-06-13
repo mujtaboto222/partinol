@@ -657,9 +657,6 @@ function buildList(){
     item.addEventListener('click',()=>setActive(lm.id));
     list.appendChild(item);
   });
-  // Set dynamic total — only count visible landmarks
-  const tot=document.getElementById('prog-total');
-  if(tot) tot.textContent=LM.length;
 }
 
 function setActive(id){
@@ -732,10 +729,6 @@ function fitOccPlane(){
 }
 
 function updateProg(){
-  const n=Object.keys(pts).length;
-  const total=LM.length;
-  document.getElementById('prog-count').textContent=n;
-  document.getElementById('prog-fill').style.width=(n/total*100)+'%';
   document.getElementById('analyse-btn').disabled=!imgEl;
 }
 
