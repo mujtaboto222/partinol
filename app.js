@@ -11,7 +11,7 @@ const LM = [
    hint:'Intersection of the posterior ramus border with the inferior cranial base surface.'},
   {id:'Ba',  abbr:'Ba',  name:'Basion',              group:'Cranial Base',
    hint:'Most anterior-inferior point on the anterior margin of the foramen magnum, on the clivus. Auto-derived from Ar and S-N distance.'},
-  {id:'Ptm', abbr:'Ptm', name:'Pterygomaxillare',    group:'Cranial Base',
+  {id:'Ptm', abbr:'Pt', name:'Pterygomaxillare',    group:'Cranial Base',
    hint:'Inferior-posterior point of the pterygomaxillary fissure — defines the Pterygoid Vertical (PTV) reference plane. Auto-derived from PNS and S-N distance.'},
   {id:'ANS', abbr:'ANS', name:'Ant. Nasal Spine',    group:'Maxilla',
    hint:'Tip of the anterior nasal spine — the sharp bony point at the base of the nasal aperture, projecting forward.'},
