@@ -11,7 +11,7 @@ const LM = [
    hint:'Intersection of the posterior ramus border with the inferior cranial base surface.'},
   {id:'Ba',  abbr:'Ba',  name:'Basion',              group:'Cranial Base',
    hint:'Most anterior-inferior point on the anterior margin of the foramen magnum, on the clivus. Auto-derived from Ar and S-N distance.'},
-  {id:'Ptm', abbr:'PtV', name:'Pterygoid Vertical',    group:'Cranial Base',
+  {id:'Ptm', abbr:'Ptm', name:'Pterygomaxillare',    group:'Cranial Base',
    hint:'Inferior-posterior point of the pterygomaxillary fissure — defines the Pterygoid Vertical (PTV) reference plane. Auto-derived from PNS and S-N distance.'},
   {id:'ANS', abbr:'ANS', name:'Ant. Nasal Spine',    group:'Maxilla',
    hint:'Tip of the anterior nasal spine — the sharp bony point at the base of the nasal aperture, projecting forward.'},
@@ -66,8 +66,6 @@ const LM = [
    hint:'Geometric center of the ramus. Initialised automatically — drag to refine if needed.'},
   {id:'DC',  abbr:'DC',  name:'DC point',            group:'Ricketts', hidden:true,
    hint:'Center of the condyle neck on the Ba-N plane. Initialised automatically — drag to refine if needed.'},
-  {id:'U6d', abbr:'U6d', name:'Upper Molar (distal)', group:'Ricketts', hidden:true,
-   hint:'Distal contact point of the upper first molar — used for the Upper Molar to PTV measurement. Auto-derived from U6.'},
 ];
 
 const COLORS={'Cranial Base':'#58a6ff','Maxilla':'#3fb950','Mandible':'#f0883e','Occlusal':'#e8c06c','Soft Tissue':'#bc8cff','Ricketts':'#ff66cc'};
@@ -661,7 +659,7 @@ function buildList(){
   });
   // Set dynamic total — only count visible landmarks
   const tot=document.getElementById('prog-total');
-  if(tot) tot.textContent=LM.filter(l=>!l.hidden).length;
+  if(tot) tot.textContent=LM.length;
 }
 
 function setActive(id){
@@ -2525,7 +2523,7 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
     var prog    = document.getElementById('ai-prog');
     var pct     = document.getElementById('ai-pct');
     var chipsEl = document.getElementById('ai-chips');
-    var lmNames = ['S','N','Or','Po','Ar','Co','A','ANS','PNS','B','Me','Pog','Gn','Go','Prn','Sn','Ls','Li',"Pog'",'Ba','Ptm','PM','U1tip','U1ap','L1tip','L1ap','U4','U6','L4','L6','U6d'];
+    var lmNames = ['S','N','Or','Po','Ar','Co','A','ANS','PNS','B','Me','Pog','Gn','Go','Prn','Sn','Ls','Li',"Pog'",'Ba','Ptm','PM','U1tip','U1ap','L1tip','L1ap','U4','U6','L4','L6'];
     var msgs    = ['Initialising model…','Preprocessing image…','Detecting cranial base…','Mapping skeletal points…','Locating dental landmarks…','Tracing soft tissue…','Placing landmarks…'];
     overlay.style.display = 'flex';
     chipsEl.innerHTML = '';
@@ -2769,19 +2767,6 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
             var pmX = pogX + (-0.011 * sn4);
             var pmY = pogY + (-0.068 * sn4);
             pts['PM'] = { x: pmX / imgW, y: pmY / imgH };
-            placed++;
-          }
-
-          // Derive Upper Molar distal (U6d): offset from U6, normalized by S-N distance.
-          // Calibrated: dx=-0.124, dy=-0.062 of S-N length. Hidden until Ricketts mode.
-          if(pts['U6'] && pts['S'] && pts['N']){
-            var sx5 = pts['S'].x * imgW, sy5 = pts['S'].y * imgH;
-            var nx5 = pts['N'].x * imgW, ny5 = pts['N'].y * imgH;
-            var sn5 = Math.hypot(nx5 - sx5, ny5 - sy5);
-            var u6X = pts['U6'].x * imgW, u6Y = pts['U6'].y * imgH;
-            var u6dX = u6X + (-0.124 * sn5);
-            var u6dY = u6Y + (-0.062 * sn5);
-            pts['U6d'] = { x: u6dX / imgW, y: u6dY / imgH };
             placed++;
           }
 
