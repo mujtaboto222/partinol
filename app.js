@@ -66,6 +66,8 @@ const LM = [
    hint:'Geometric center of the ramus. Initialised automatically — drag to refine if needed.'},
   {id:'DC',  abbr:'DC',  name:'DC point',            group:'Ricketts', hidden:true,
    hint:'Center of the condyle neck on the Ba-N plane. Initialised automatically — drag to refine if needed.'},
+  {id:'U6d', abbr:'U6d', name:'Upper Molar (distal)', group:'Ricketts', hidden:true,
+   hint:'Distal contact point of the upper first molar — used for the Upper Molar to PTV measurement. Auto-derived from U6.'},
 ];
 
 const COLORS={'Cranial Base':'#58a6ff','Maxilla':'#3fb950','Mandible':'#f0883e','Occlusal':'#e8c06c','Soft Tissue':'#bc8cff','Ricketts':'#ff66cc'};
@@ -2516,7 +2518,7 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
     var prog    = document.getElementById('ai-prog');
     var pct     = document.getElementById('ai-pct');
     var chipsEl = document.getElementById('ai-chips');
-    var lmNames = ['S','N','Or','Po','Ar','Co','A','ANS','PNS','B','Me','Pog','Gn','Go','Prn','Sn','Ls','Li',"Pog'",'Ba','Ptm','PM','U1tip','U1ap','L1tip','L1ap','U4','U6','L4','L6'];
+    var lmNames = ['S','N','Or','Po','Ar','Co','A','ANS','PNS','B','Me','Pog','Gn','Go','Prn','Sn','Ls','Li',"Pog'",'Ba','Ptm','PM','U1tip','U1ap','L1tip','L1ap','U4','U6','L4','L6','U6d'];
     var msgs    = ['Initialising model…','Preprocessing image…','Detecting cranial base…','Mapping skeletal points…','Locating dental landmarks…','Tracing soft tissue…','Placing landmarks…'];
     overlay.style.display = 'flex';
     chipsEl.innerHTML = '';
@@ -2689,7 +2691,7 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
           }
 
           // Derive Pterygomaxillare (Ptm): offset from PNS, normalized by S-N distance.
-          // Calibrated from 16 cases: dx=-0.095, dy=-0.231 of S-N length.
+          // Recalibrated from 14 cases: dx=-0.122, dy=-0.416 of S-N length (dy std 0.032).
           // After predicting, snap horizontally to the bright posterior wall of the
           // pterygomaxillary fissure (the radiopaque vertical edge behind the dark fissure).
           if(pts['PNS'] && pts['S'] && pts['N']){
@@ -2697,8 +2699,8 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
             var nx3 = pts['N'].x * imgW, ny3 = pts['N'].y * imgH;
             var sn3 = Math.hypot(nx3 - sx3, ny3 - sy3);
             var pnsX = pts['PNS'].x * imgW, pnsY = pts['PNS'].y * imgH;
-            var ptmX = pnsX + (-0.095 * sn3);
-            var ptmY = pnsY + (-0.231 * sn3);
+            var ptmX = pnsX + (-0.122 * sn3);
+            var ptmY = pnsY + (-0.416 * sn3);
 
             // Snap: search ±5mm (~0.07 of S-N) around predicted X for the strongest
             // dark→bright transition (left-to-right brightness rise = posterior wall).
@@ -2760,6 +2762,19 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
             var pmX = pogX + (-0.011 * sn4);
             var pmY = pogY + (-0.068 * sn4);
             pts['PM'] = { x: pmX / imgW, y: pmY / imgH };
+            placed++;
+          }
+
+          // Derive Upper Molar distal (U6d): offset from U6, normalized by S-N distance.
+          // Calibrated: dx=-0.124, dy=-0.062 of S-N length. Hidden until Ricketts mode.
+          if(pts['U6'] && pts['S'] && pts['N']){
+            var sx5 = pts['S'].x * imgW, sy5 = pts['S'].y * imgH;
+            var nx5 = pts['N'].x * imgW, ny5 = pts['N'].y * imgH;
+            var sn5 = Math.hypot(nx5 - sx5, ny5 - sy5);
+            var u6X = pts['U6'].x * imgW, u6Y = pts['U6'].y * imgH;
+            var u6dX = u6X + (-0.124 * sn5);
+            var u6dY = u6Y + (-0.062 * sn5);
+            pts['U6d'] = { x: u6dX / imgW, y: u6dY / imgH };
             placed++;
           }
 
