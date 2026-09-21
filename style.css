@@ -185,6 +185,12 @@
   .m-name{color:var(--text);font-size:.7rem;line-height:1.3;}
   .m-name small{display:block;color:var(--muted);font-size:.56rem;}
   .m-val{font-weight:500;text-align:right;min-width:42px;color:var(--text);}
+  /* Live drag: glowing green on measurements that are changing (fades out on release) */
+  .m-row .m-val{transition:color .6s ease,text-shadow .6s ease;}
+  .m-row{transition:background .6s ease;}
+  .m-row.m-live{background:rgba(57,255,136,.06);}
+  .m-row.m-live .m-val{color:#39ff88;text-shadow:0 0 4px rgba(57,255,136,.9),0 0 10px rgba(57,255,136,.6),0 0 18px rgba(57,255,136,.35);}
+  html.light .m-row.m-live .m-val{color:#0fae55;text-shadow:0 0 6px rgba(15,174,85,.45),0 0 14px rgba(15,174,85,.25);}
   .m-status{font-size:.56rem;padding:1px 5px;border-radius:4px;text-align:center;min-width:48px;font-weight:600;}
   .sn{color:var(--accent);}
   .sh{color:var(--warn);}

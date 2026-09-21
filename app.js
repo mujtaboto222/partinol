@@ -1360,7 +1360,7 @@ window.addEventListener('mousemove',e=>{
 });
 window.addEventListener('mouseup',e=>{
   if(_lastPointerType !== 'mouse') return;
-  if(dragging){ snapState(); dragging=null; svg.style.cursor='crosshair'; }
+  if(dragging){ snapState(); dragging=null; svg.style.cursor='crosshair'; endLiveAnalysis(); }
   if(rickettsBoxDrag){ snapState(); rickettsBoxDrag=null; }
   if(draggingOcc){ snapState(); draggingOcc=null; svg.style.cursor='crosshair'; occPlaneManual=true; }
   if(isPanning){
@@ -1771,8 +1771,19 @@ modeMenu.querySelectorAll('.mode-item').forEach(item => {
 document.getElementById('analyse-btn').addEventListener('click',()=>runAnalysis(true));
 
 // Live update while a landmark is dragged — only once results are already on screen.
+let shownVals = {};   // value text of each measurement currently on screen
+let dragBase  = null; // values when the current drag started (used to glow changed rows)
+
 function liveAnalysis(){
-  if(document.getElementById('export-btn').style.display === 'block') runAnalysis(false);
+  if(document.getElementById('export-btn').style.display !== 'block') return;
+  if(!dragBase) dragBase = {...shownVals};
+  runAnalysis(false);
+}
+
+// Drag finished: forget the start values and let the green glow fade out.
+function endLiveAnalysis(){
+  dragBase = null;
+  document.querySelectorAll('.m-row.m-live').forEach(r => r.classList.remove('m-live'));
 }
 
 // animate=true  → fade out/in + row animation + mobile toast (button click)
@@ -1856,11 +1867,15 @@ function runAnalysis(animate){
     const st = hasValue ? classify(val, m.norm[0], m.norm[1]) : null;
 
     const row = document.createElement('div');
-    row.className = animate ? 'm-row m-row-anim' : 'm-row';
+    const valText = hasValue ? val.toFixed(1)+m.u : '–';
+    shownVals[m.n] = valText;
+    // Glow green if this value has changed since the drag started
+    const changed = dragBase && dragBase[m.n] !== undefined && dragBase[m.n] !== valText;
+    row.className = (animate ? 'm-row m-row-anim' : 'm-row') + (changed ? ' m-live' : '');
     row.style.animationDelay = (rowIndex * 40) + 'ms';
     rowIndex++;
     row.innerHTML = `
-      <div class="m-name">${m.n}<small>${m.d}</small></div><div><div class="m-val">${hasValue ? val.toFixed(1)+m.u : '–'}</div><div class="m-norm">${m.norm[0]}${m.u} ±${m.norm[1]}</div></div>
+      <div class="m-name">${m.n}<small>${m.d}</small></div><div><div class="m-val">${valText}</div><div class="m-norm">${m.norm[0]}${m.u} ±${m.norm[1]}</div></div>
       ${!hasValue
         ? `<span class="m-status m-na">N/A</span>`
         : `<span class="m-status ${st.c}">${st.l}</span>`}`;
@@ -2409,7 +2424,7 @@ document.getElementById('export-btn').addEventListener('click', async () => {
       return;
     }
 
-    if(_drag){ snapState(); _drag=null; return; }
+    if(_drag){ snapState(); _drag=null; endLiveAnalysis(); return; }
     if(_dragOcc){ snapState(); _dragOcc=null; occPlaneManual=true; return; }
 
     // Tap = place ONE landmark exactly at this position
@@ -2456,7 +2471,7 @@ document.getElementById('export-btn').addEventListener('click', async () => {
 
   svg.addEventListener('pointercancel',function(e){
     if(e.pointerType==='mouse') return;
-    _drag=null;_dragOcc=null;_pan=false;_moved=false;_placed=false;
+    _drag=null;_dragOcc=null;_pan=false;_moved=false;_placed=false;endLiveAnalysis();
   });
 
   // ── PINCH ZOOM (2-finger touch only) ────────
