@@ -732,10 +732,7 @@ function fitOccPlane(){
 }
 
 function updateProg(){
-  const n=Object.keys(pts).length;
-  const total=LM.length;
-  document.getElementById('prog-count').textContent=n;
-  document.getElementById('prog-fill').style.width=(n/total*100)+'%';
+  // Progress bar (prog-count / prog-fill) was removed from index.html — only update the Analyse button.
   document.getElementById('analyse-btn').disabled=!imgEl;
 }
 
