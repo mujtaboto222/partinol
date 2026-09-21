@@ -1315,7 +1315,7 @@ window.addEventListener('mousemove',e=>{
     const r=svg.getBoundingClientRect();
     const n=toN(e.clientX-r.left,e.clientY-r.top);
     pts[dragging]={x:Math.max(0,Math.min(1,n.x)),y:Math.max(0,Math.min(1,n.y))};
-    drawImg();renderOvl();
+    drawImg();renderOvl();liveAnalysis();
     if(showMag)drawMag(e.clientX-r.left,e.clientY-r.top);
   } else if(rickettsBoxDrag && rickettsBox){
     // Drag a side or rotate the box
@@ -1765,7 +1765,17 @@ modeMenu.querySelectorAll('.mode-item').forEach(item => {
 
 
 // ── ANALYSIS ──
-document.getElementById('analyse-btn').addEventListener('click',()=>{
+// Analyse button: full update with fade animation.
+document.getElementById('analyse-btn').addEventListener('click',()=>runAnalysis(true));
+
+// Live update while a landmark is dragged — only once results are already on screen.
+function liveAnalysis(){
+  if(document.getElementById('export-btn').style.display === 'block') runAnalysis(false);
+}
+
+// animate=true  → fade out/in + row animation + mobile toast (button click)
+// animate=false → instant redraw, no animation (live dragging)
+function runAnalysis(animate){
   const p = pxMap(pts);
   const mmPerPx = getMmPerPx(p);
   const toMmNow = v => mmPerPx ? v * mmPerPx : null;
@@ -1775,11 +1785,7 @@ document.getElementById('analyse-btn').addEventListener('click',()=>{
 
   const body = document.getElementById('results-body');
 
-  // ── Transition: fade out old results, then populate ──
-  body.style.transition = 'opacity 0.25s ease';
-  body.style.opacity = '0';
-
-  setTimeout(() => {
+  function build(){
     body.innerHTML = '';
 
   // Mode badge
@@ -1846,7 +1852,7 @@ document.getElementById('analyse-btn').addEventListener('click',()=>{
     const st = hasValue ? classify(val, m.norm[0], m.norm[1]) : null;
 
     const row = document.createElement('div');
-    row.className = 'm-row m-row-anim';
+    row.className = animate ? 'm-row m-row-anim' : 'm-row';
     row.style.animationDelay = (rowIndex * 40) + 'ms';
     rowIndex++;
     row.innerHTML = `
@@ -1859,6 +1865,8 @@ document.getElementById('analyse-btn').addEventListener('click',()=>{
 
   // Show export button now that results exist
   document.getElementById('export-btn').style.display = 'block';
+
+  if(!animate) return; // live update: skip toast and fade
 
   // On mobile: show toast to switch to results tab
   if(window.innerWidth <= 1024){
@@ -1880,8 +1888,15 @@ document.getElementById('analyse-btn').addEventListener('click',()=>{
     body.style.opacity = '1';
   });
 
-  }, 260); // end setTimeout — matches fade-out duration
-});
+  } // end build()
+
+  if(!animate){ build(); return; }
+
+  // ── Transition: fade out old results, then populate ──
+  body.style.transition = 'opacity 0.25s ease';
+  body.style.opacity = '0';
+  setTimeout(build, 260); // matches fade-out duration
+}
 
 
 // ── PDF EXPORT ──
@@ -2340,7 +2355,7 @@ document.getElementById('export-btn').addEventListener('click', async () => {
     if(_drag){
       let n=toN(p.x,p.y);
       pts[_drag]={x:Math.max(0,Math.min(1,n.x)),y:Math.max(0,Math.min(1,n.y))};
-      drawImg(); renderOvl(); return;
+      drawImg(); renderOvl(); liveAnalysis(); return;
     }
     if(_dragOcc && occPlane){
       let n=toN(p.x,p.y);
