@@ -742,7 +742,7 @@ const dropZ=document.getElementById('drop-zone'),upIn=document.getElementById('u
 dropZ.addEventListener('click',()=>upIn.click());
 upIn.addEventListener('change',e=>{
   if(e.target.files[0]){
-    pts={}; activeLm=null; occPlane=null; occPlaneManual=false;
+    pts={}; activeLm=null; occPlane=null; occPlaneManual=false; lockedMmPerPx=null;
     snapHistory=[]; snapIdx=-1;
     buildList(); updateProg(); renderOvl();
     loadImg(e.target.files[0]);
@@ -753,7 +753,7 @@ dropZ.addEventListener('dragleave',()=>dropZ.classList.remove('over'));
 dropZ.addEventListener('drop',e=>{
   e.preventDefault(); dropZ.classList.remove('over');
   if(e.dataTransfer.files[0]){
-    pts={}; activeLm=null; occPlane=null; occPlaneManual=false;
+    pts={}; activeLm=null; occPlane=null; occPlaneManual=false; lockedMmPerPx=null;
     snapHistory=[]; snapIdx=-1;
     buildList(); updateProg(); renderOvl();
     loadImg(e.dataTransfer.files[0]);
@@ -1532,11 +1532,13 @@ function updZoom(){
 // User can override with manual two-point calibration.
 const SN_MM = 71; // clinical average S-N length in mm
 let manualMmPerPx = null; // set only if user manually calibrates
+let lockedMmPerPx = null; // S-N scale, fixed each time Analyse runs (so dragging N doesn't change mm values)
 let calibrating = false, calibPt1 = null;
 
 // Returns mm-per-px: manual if set, otherwise derived from S-N landmarks
 function getMmPerPx(p){
   if(manualMmPerPx) return manualMmPerPx;
+  if(lockedMmPerPx) return lockedMmPerPx;
   if(p.S && p.N){
     const snPx = dst(p.S, p.N);
     if(snPx > 0) return SN_MM / snPx;
@@ -1777,6 +1779,8 @@ function liveAnalysis(){
 // animate=false → instant redraw, no animation (live dragging)
 function runAnalysis(animate){
   const p = pxMap(pts);
+  // Analyse click (not live drag): re-measure S-N and lock the scale
+  if(animate) lockedMmPerPx = (p.S && p.N && dst(p.S, p.N) > 0) ? SN_MM / dst(p.S, p.N) : null;
   const mmPerPx = getMmPerPx(p);
   const toMmNow = v => mmPerPx ? v * mmPerPx : null;
   const calibSource = manualMmPerPx
