@@ -11,8 +11,8 @@ const LM = [
    hint:'Intersection of the posterior ramus border with the inferior cranial base surface.'},
   {id:'Ba',  abbr:'Ba',  name:'Basion',              group:'Cranial Base',
    hint:'Most anterior-inferior point on the anterior margin of the foramen magnum, on the clivus. Auto-derived from Ar and S-N distance.'},
-  {id:'Ptm', abbr:'Pt', name:'Pterygomaxillare',    group:'Cranial Base',
-   hint:'Inferior-posterior point of the pterygomaxillary fissure — defines the Pterygoid Vertical (PTV) reference plane. Auto-derived from PNS and S-N distance.'},
+  {id:'Ptm', abbr:'Ptm', name:'Pterygomaxillare',    group:'Cranial Base',
+   hint:'Ricketts Pt point — where the lower edge of the foramen rotundum meets the posterior wall of the pterygomaxillary fissure. Defines PTV and the facial axis. Auto-derived from PNS, Co and Or.'},
   {id:'ANS', abbr:'ANS', name:'Ant. Nasal Spine',    group:'Maxilla',
    hint:'Tip of the anterior nasal spine — the sharp bony point at the base of the nasal aperture, projecting forward.'},
   {id:'PNS', abbr:'PNS', name:'Post. Nasal Spine',   group:'Maxilla',
@@ -66,8 +66,6 @@ const LM = [
    hint:'Geometric center of the ramus. Initialised automatically — drag to refine if needed.'},
   {id:'DC',  abbr:'DC',  name:'DC point',            group:'Ricketts', hidden:true,
    hint:'Center of the condyle neck on the Ba-N plane. Initialised automatically — drag to refine if needed.'},
-  {id:'U6d', abbr:'U6d', name:'Upper Molar (distal)', group:'Ricketts', hidden:true,
-   hint:'Distal contact point of the upper first molar — used for the Upper Molar to PTV measurement. Auto-derived from U6.'},
 ];
 
 const COLORS={'Cranial Base':'#58a6ff','Maxilla':'#3fb950','Mandible':'#f0883e','Occlusal':'#e8c06c','Soft Tissue':'#bc8cff','Ricketts':'#ff66cc'};
@@ -659,6 +657,9 @@ function buildList(){
     item.addEventListener('click',()=>setActive(lm.id));
     list.appendChild(item);
   });
+  // Set dynamic total — only count visible landmarks
+  const tot=document.getElementById('prog-total');
+  if(tot) tot.textContent=LM.filter(l=>!l.hidden).length;
 }
 
 function setActive(id){
@@ -731,6 +732,10 @@ function fitOccPlane(){
 }
 
 function updateProg(){
+  const n=Object.keys(pts).length;
+  const total=LM.length;
+  document.getElementById('prog-count').textContent=n;
+  document.getElementById('prog-fill').style.width=(n/total*100)+'%';
   document.getElementById('analyse-btn').disabled=!imgEl;
 }
 
@@ -2518,7 +2523,7 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
     var prog    = document.getElementById('ai-prog');
     var pct     = document.getElementById('ai-pct');
     var chipsEl = document.getElementById('ai-chips');
-    var lmNames = ['S','N','Or','Po','Ar','Co','A','ANS','PNS','B','Me','Pog','Gn','Go','Prn','Sn','Ls','Li',"Pog'",'Ba','Ptm','PM','U1tip','U1ap','L1tip','L1ap','U4','U6','L4','L6','U6d'];
+    var lmNames = ['S','N','Or','Po','Ar','Co','A','ANS','PNS','B','Me','Pog','Gn','Go','Prn','Sn','Ls','Li',"Pog'",'Ba','Ptm','PM','U1tip','U1ap','L1tip','L1ap','U4','U6','L4','L6'];
     var msgs    = ['Initialising model…','Preprocessing image…','Detecting cranial base…','Mapping skeletal points…','Locating dental landmarks…','Tracing soft tissue…','Placing landmarks…'];
     overlay.style.display = 'flex';
     chipsEl.innerHTML = '';
@@ -2625,55 +2630,56 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
             placed++;
           });
 
-          // Place Pog' at brightest point to the right of Pog
-          if(pts['Pog'] && imgEl){
+          // Derive Pog' (ST Pogonion): offset from Pog, normalized by S-N distance.
+          // Calibrated from 15 cases: dx=0.168, dy=-0.040 of S-N length (std 0.029 / 0.043).
+          // Then snap to the soft tissue edge: scan a box around the guess, find the
+          // bright→dark edge on each row, keep the most anterior one (chin prominence).
+          if(pts['Pog'] && pts['S'] && pts['N']){
+            var sx6 = pts['S'].x * imgW, sy6 = pts['S'].y * imgH;
+            var nx6 = pts['N'].x * imgW, ny6 = pts['N'].y * imgH;
+            var sn6 = Math.hypot(nx6 - sx6, ny6 - sy6);
+            var pogpX = pts['Pog'].x * imgW + (0.168 * sn6);
+            var pogpY = pts['Pog'].y * imgH + (-0.040 * sn6);
+
             try {
-              var scanCanvas = document.createElement('canvas');
-              scanCanvas.width  = imgW;
-              scanCanvas.height = imgH;
-              var sCtx = scanCanvas.getContext('2d');
-              sCtx.drawImage(imgEl, 0, 0, imgW, imgH);
+              var rx6 = Math.round(0.07 * sn6), ry6 = Math.round(0.05 * sn6);
+              var bx0 = Math.max(0, Math.round(pogpX - rx6) - 3);
+              var bx1 = Math.min(imgW - 1, Math.round(pogpX + rx6));
+              var by0 = Math.max(0, Math.round(pogpY - ry6) - 2);
+              var by1 = Math.min(imgH - 1, Math.round(pogpY + ry6) + 2);
+              var bw = bx1 - bx0 + 1, bh = by1 - by0 + 1;
 
-              var pogX = Math.round(pts['Pog'].x * imgW);
-              var pogY = Math.round(pts['Pog'].y * imgH);
+              var cv6 = document.createElement('canvas');
+              cv6.width = bw; cv6.height = bh;
+              var c6 = cv6.getContext('2d');
+              c6.drawImage(imgEl, bx0, by0, bw, bh, 0, 0, bw, bh);
+              var d6 = c6.getImageData(0, 0, bw, bh).data;
+              function lum6(x, y){ var i = (y * bw + x) * 4; return (d6[i] + d6[i+1] + d6[i+2]) / 3; }
 
-              // Scan horizontally to the right, within ±20px vertically
-              var scanStart = pogX + 5;
-              var scanEnd   = Math.min(pogX + 120, imgW - 1);
-              var halfH     = 20;
-              var yMin      = Math.max(0, pogY - halfH);
-              var yMax      = Math.min(imgH - 1, pogY + halfH);
-
-              // Get brightness of each column
-              var cols = [];
-              for(var sx = scanStart; sx <= scanEnd; sx++){
-                var colBrightness = 0;
-                for(var sy = yMin; sy <= yMax; sy++){
-                  var px = sCtx.getImageData(sx, sy, 1, 1).data;
-                  colBrightness += (px[0] + px[1] + px[2]) / 3;
+              var rows6 = [], maxDrop6 = 0;
+              for(var y6 = 2; y6 < bh - 2; y6++){
+                var best6 = 0, bestX6 = -1;
+                for(var x6 = 3; x6 < bw; x6++){
+                  var before6 = 0, after6 = 0;
+                  for(var k6 = -2; k6 <= 2; k6++){ before6 += lum6(x6 - 3, y6 + k6); after6 += lum6(x6, y6 + k6); }
+                  var drop6 = (before6 - after6) / 5;
+                  if(drop6 > best6){ best6 = drop6; bestX6 = x6 - 1.5; }
                 }
-                cols.push({ x: sx, b: colBrightness / (yMax - yMin + 1) });
+                if(bestX6 >= 0){ rows6.push({ x: bestX6, y: y6, s: best6 }); if(best6 > maxDrop6) maxDrop6 = best6; }
               }
 
-              // Find steepest brightness drop = soft tissue edge
-              var bestX = pogX + 25;
-              var maxDrop = 0;
-
-              for(var i = 1; i < cols.length; i++){
-                var drop = cols[i-1].b - cols[i].b;
-                if(drop > maxDrop){
-                  maxDrop = drop;
-                  bestX = cols[i-1].x;
-                }
+              if(maxDrop6 >= 8){
+                var pick6 = null;
+                rows6.forEach(function(r){ if(r.s >= 0.5 * maxDrop6 && (!pick6 || r.x > pick6.x)) pick6 = r; });
+                if(pick6){ pogpX = bx0 + pick6.x; pogpY = by0 + pick6.y; }
               }
-
-              pts['Pogp'] = { x: bestX / imgW, y: pts['Pog'].y };
-              placed++;
             } catch(e){
-              // fallback to fixed offset
-              pts['Pogp'] = { x: pts['Pog'].x + (25 / imgW), y: pts['Pog'].y };
-              placed++;
+              // fall back to calibrated guess
             }
+
+            pts['Pogp'] = { x: pogpX / imgW, y: pogpY / imgH };
+            markPlaced('Pogp');
+            placed++;
           }
 
           // Derive Basion (Ba): offset from Articulare, normalized by S-N distance.
@@ -2690,63 +2696,27 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
             placed++;
           }
 
-          // Derive Pterygomaxillare (Ptm): offset from PNS, normalized by S-N distance.
-          // Recalibrated from 14 cases: dx=-0.122, dy=-0.416 of S-N length (dy std 0.032).
-          // After predicting, snap horizontally to the bright posterior wall of the
-          // pterygomaxillary fissure (the radiopaque vertical edge behind the dark fissure).
+          // Derive Ricketts Pt point (id 'Ptm'): offset from PNS, normalized by S-N distance.
+          // Calibrated from 15 cases. Uses Co + Or when available (error ≈ 3.1 / 3.0 mm),
+          // otherwise PNS only (error ≈ 3.2 / 4.0 mm). No image snap — formula only.
           if(pts['PNS'] && pts['S'] && pts['N']){
             var sx3 = pts['S'].x * imgW, sy3 = pts['S'].y * imgH;
             var nx3 = pts['N'].x * imgW, ny3 = pts['N'].y * imgH;
             var sn3 = Math.hypot(nx3 - sx3, ny3 - sy3);
             var pnsX = pts['PNS'].x * imgW, pnsY = pts['PNS'].y * imgH;
-            var ptmX = pnsX + (-0.122 * sn3);
-            var ptmY = pnsY + (-0.416 * sn3);
 
-            // Snap: search ±5mm (~0.07 of S-N) around predicted X for the strongest
-            // dark→bright transition (left-to-right brightness rise = posterior wall).
-            try {
-              var scanCv = document.createElement('canvas');
-              scanCv.width = imgW; scanCv.height = imgH;
-              var sCtx = scanCv.getContext('2d');
-              sCtx.drawImage(imgEl, 0, 0, imgW, imgH);
+            // PNS only
+            var ptDx = -0.1405, ptDy = -0.4213;
 
-              var searchRadius = Math.round(0.07 * sn3); // ±5mm
-              var halfH = Math.round(0.04 * sn3);
-              var cx0 = Math.round(ptmX);
-              var cy0 = Math.round(ptmY);
-              var xMin = Math.max(0, cx0 - searchRadius);
-              var xMax = Math.min(imgW - 1, cx0 + searchRadius);
-              var yMin = Math.max(0, cy0 - halfH);
-              var yMax = Math.min(imgH - 1, cy0 + halfH);
-              var w = xMax - xMin + 1;
-              var bandH = yMax - yMin + 1;
-
-              var band = sCtx.getImageData(xMin, yMin, w, bandH).data;
-
-              // Mean brightness per column
-              var cols = new Array(w);
-              for(var ix = 0; ix < w; ix++){
-                var sum = 0;
-                for(var iy = 0; iy < bandH; iy++){
-                  var p = (iy * w + ix) * 4;
-                  sum += (band[p] + band[p+1] + band[p+2]) / 3;
-                }
-                cols[ix] = sum / bandH;
-              }
-
-              // Find strongest dark→bright rise (largest positive gradient)
-              var bestIdx = -1, bestRise = 0;
-              for(var k = 1; k < w; k++){
-                var rise = cols[k] - cols[k-1];
-                if(rise > bestRise){ bestRise = rise; bestIdx = k; }
-              }
-
-              if(bestIdx !== -1){ ptmX = xMin + bestIdx; }
-            } catch(e){
-              // fall back to predicted position
+            // PNS + Co + Or: offsets of Co and Or from PNS, in S-N units
+            if(pts['Co'] && pts['Or']){
+              var coDx = (pts['Co'].x * imgW - pnsX) / sn3, coDy = (pts['Co'].y * imgH - pnsY) / sn3;
+              var orDx = (pts['Or'].x * imgW - pnsX) / sn3, orDy = (pts['Or'].y * imgH - pnsY) / sn3;
+              ptDx = -0.0551 + 0.3230*coDx + 0.0944*coDy + 0.4262*orDx + 0.1500*orDy;
+              ptDy = -0.3637 - 0.3783*coDx + 0.4366*coDy - 0.0407*orDx + 0.3236*orDy;
             }
 
-            pts['Ptm'] = { x: ptmX / imgW, y: ptmY / imgH };
+            pts['Ptm'] = { x: (pnsX + ptDx * sn3) / imgW, y: (pnsY + ptDy * sn3) / imgH };
             markPlaced('Ptm');
             placed++;
           }
@@ -2762,19 +2732,6 @@ setInterval(function(){ fetch('https://mujtaba1212-ceph-landmark-detector.hf.spa
             var pmX = pogX + (-0.011 * sn4);
             var pmY = pogY + (-0.068 * sn4);
             pts['PM'] = { x: pmX / imgW, y: pmY / imgH };
-            placed++;
-          }
-
-          // Derive Upper Molar distal (U6d): offset from U6, normalized by S-N distance.
-          // Calibrated: dx=-0.124, dy=-0.062 of S-N length. Hidden until Ricketts mode.
-          if(pts['U6'] && pts['S'] && pts['N']){
-            var sx5 = pts['S'].x * imgW, sy5 = pts['S'].y * imgH;
-            var nx5 = pts['N'].x * imgW, ny5 = pts['N'].y * imgH;
-            var sn5 = Math.hypot(nx5 - sx5, ny5 - sy5);
-            var u6X = pts['U6'].x * imgW, u6Y = pts['U6'].y * imgH;
-            var u6dX = u6X + (-0.124 * sn5);
-            var u6dY = u6Y + (-0.062 * sn5);
-            pts['U6d'] = { x: u6dX / imgW, y: u6dY / imgH };
             placed++;
           }
 
